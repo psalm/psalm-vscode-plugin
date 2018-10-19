@@ -1,0 +1,102 @@
+{
+	"name": "psalm-vscode-plugin",
+	"description": "VS Code Plugin for Psalm",
+	"author": "Matthew Brown",
+	"license": "MIT",
+	"version": "0.1.0",
+	"publisher": "psalm",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/psalm/vscode-plugin"
+	},
+	"engines": {
+		"vscode": "^1.26.0"
+	},
+	"activationEvents": [
+		"onLanguage:php",
+		"workspaceContains:**/*.php"
+	],
+	"main": "./out/extension",
+	"contributes": {
+		"configuration": {
+			"type": "object",
+			"title": "PHP - Psalm Analyzer",
+			"properties": {
+				"psalm.phpExecutablePath": {
+					"type": [
+						"string",
+						"null"
+					],
+					"default": null,
+					"description": "Optional, defaults to searching for \"php\". The path to a PHP 7.0+ executable to use to execute the Psalm server. The PHP 7.0+ installation should preferably include and enable the PHP module `pcntl`. (Modifying requires restart)"
+				},
+				"psalm.psalmScriptPath": {
+					"type": [
+						"string",
+						"null"
+					],
+					"default": null,
+					"description": "Optional (Advanced). If provided, this overrides the Psalm script to use, e.g. vendor/bin/psalm-language-server. (Modifying requires restart)"
+				},
+				"psalm.enableDebugLog": {
+					"type": [
+						"boolean"
+					],
+					"default": false,
+					"description": "Enable this to print messages to the debug console when developing or debugging this VS Code extension. (Modifying requires restart)"
+				},
+				"psalm.analyzedFileExtensions": {
+					"type": [
+						"array"
+					],
+					"default": [
+						"php"
+					],
+					"description": "A list of file extensions to request Psalm to analyze. By default, this only includes 'php' (Modifying requires restart)"
+				},
+				"psalm.unusedVariableDetection": {
+					"type": [
+						"boolean"
+					],
+					"default": false,
+					"description": "Enable this to enable unused variable and parameter detection"
+				},
+				"psalm.connectToServerWithTcp": {
+					"type": [
+						"boolean",
+						"null"
+					],
+					"default": false,
+					"description": "If this is set to true, this VSCode extension will use TCP instead of the default STDIO to communicate with the Psalm language server. (Modifying requires restart)"
+				}
+			}
+		}
+	},
+	"scripts": {
+		"build": "tsc -p .",
+		"watch": "tsc -w -p .",
+		"postinstall": "node ./node_modules/vscode/bin/install",
+		"lint": "tslint -c tslint.json \"src/**/*.ts\"",
+		"semantic-release": "semantic-release",
+		"commitmsg": "commitlint -e $GIT_PARAMS"
+	},
+	"devDependencies": {
+		"@commitlint/cli": "7.1.1",
+		"@commitlint/config-conventional": "7.1.1",
+		"@types/mocha": "5.2.5",
+		"@types/mz": "0.0.32",
+		"@types/node": "8.10.29",
+		"@types/semver": "5.5.0",
+		"husky": "0.14.3",
+		"semantic-release": "15.9.12",
+		"semantic-release-vsce": "2.1.2",
+		"tslint": "5.11.0",
+		"typescript": "3.0.3",
+		"vscode": "1.1.21"
+	},
+	"dependencies": {
+		"mz": "^2.7.0",
+		"semver": "^5.5.1",
+		"vscode-languageclient": "^5.1.0"
+	}
+}

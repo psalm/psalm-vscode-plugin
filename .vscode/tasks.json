@@ -1,0 +1,19 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+		  "type": "npm",
+		  "script": "build",
+		  "problemMatcher": [
+				"$tsc"
+		  ]
+		},
+		{
+		  "type": "npm",
+		  "script": "watch",
+		  "problemMatcher": [
+				"$tsc-watch"
+		  ]
+		}
+	  ]
+}
