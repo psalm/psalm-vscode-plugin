@@ -7,7 +7,7 @@
 	"publisher": "psalm",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/psalm/vscode-plugin"
+		"url": "https://github.com/psalm/psalm-vscode-plugin"
 	},
 	"engines": {
 		"vscode": "^1.26.0"
