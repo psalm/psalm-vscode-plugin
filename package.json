@@ -1,10 +1,11 @@
 {
 	"name": "psalm-vscode-plugin",
+	"displayName": "Psalm (PHP Static Analysis Linting Machine)",
 	"description": "VS Code Plugin for Psalm",
 	"author": "Matthew Brown",
 	"license": "MIT",
-	"version": "0.1.0",
-	"publisher": "psalm",
+	"version": "0.4.0",
+	"publisher": "getpsalm",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/psalm/psalm-vscode-plugin"

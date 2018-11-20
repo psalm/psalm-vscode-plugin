@@ -61,7 +61,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         return;
     }
 
-    const workspacePath = workspaceFolders[0].uri.path;
+    const workspacePath = workspaceFolders[0].uri.fsPath;
 
     if (!isFile(psalmScriptPath)) {
         psalmScriptPath = path.join(workspacePath, psalmScriptPath);
