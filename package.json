@@ -87,8 +87,7 @@
 		"watch": "tsc -w -p .",
 		"postinstall": "node ./node_modules/vscode/bin/install",
 		"lint": "tslint -c tslint.json \"src/**/*.ts\"",
-		"semantic-release": "semantic-release",
-		"commitmsg": "commitlint -e $GIT_PARAMS"
+		"semantic-release": "semantic-release"
 	},
 	"devDependencies": {
 		"@commitlint/cli": "7.1.1",
