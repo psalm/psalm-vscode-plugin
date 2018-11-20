@@ -6,6 +6,15 @@
 	"license": "MIT",
 	"version": "0.5.0",
 	"publisher": "getpsalm",
+	"categories": [
+		"Linters",
+		"Programming Languages"
+	],
+	"icon": "icon.png",
+	"galleryBanner": {
+		"color": "#582a24",
+		"theme": "dark"
+	},
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/psalm/psalm-vscode-plugin"
@@ -88,7 +97,7 @@
 		"@types/mz": "0.0.32",
 		"@types/node": "8.10.29",
 		"@types/semver": "5.5.0",
-		"husky": "0.14.3",
+		"husky": "1.1.4",
 		"semantic-release": "15.9.12",
 		"semantic-release-vsce": "2.1.2",
 		"tslint": "5.11.0",

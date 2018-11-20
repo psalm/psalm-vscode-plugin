@@ -4,7 +4,7 @@ Visual Studio Code plugin for Psalm.
 
 ## Features
 
-- Runs [Psalm's analysis](https://getpsalm.org) when opening and saving files
+- Runs [Psalm's analysis](https://getpsalm.org) when opening and saving files using the Language Server Protocol for communication.
 
 ## Contributing
 
