@@ -116,9 +116,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             }
 
             // The server is implemented in PHP
-            args.unshift(psalmScriptPath);
+            args.unshift(psalmScriptPath, '--language-server');
             console.log('starting Psalm Language Server', phpExecutablePath, args);
-            
+
             const childProcess = spawn(phpExecutablePath, args, {cwd: dirToAnalyze});
             childProcess.stderr.on('data', (chunk: Buffer) => {
                 console.error(chunk + '');
