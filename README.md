@@ -12,5 +12,5 @@ You can build and test locally in Visual Studio this locally using `npm`:
 
 ```
 npm install
-npm build
+npm run build
 ```

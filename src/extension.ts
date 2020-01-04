@@ -43,7 +43,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     const conf = vscode.workspace.getConfiguration('psalm');
     const phpExecutablePath = conf.get<string>('phpExecutablePath') || 'php';
     const workspaceFolders = vscode.workspace.workspaceFolders;
-    const defaultPsalmScriptPath = path.join('vendor', 'bin', 'psalm-language-server');
+    const defaultPsalmScriptPath = path.join('vendor', 'vimeo', 'psalm', 'psalm-language-server');
     let psalmScriptPath = conf.get<string>('psalmScriptPath') || defaultPsalmScriptPath;
     const unusedVariableDetection = conf.get<boolean>('unusedVariableDetection') || false;
     const enableDebugLog = conf.get<boolean>('enableDebugLog') || false;

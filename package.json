@@ -4,7 +4,7 @@
 	"description": "VS Code Plugin for Psalm",
 	"author": "Matthew Brown",
 	"license": "MIT",
-	"version": "0.6.0",
+	"version": "0.6.1",
 	"publisher": "getpsalm",
 	"categories": [
 		"Linters",
@@ -20,13 +20,19 @@
 		"url": "https://github.com/psalm/psalm-vscode-plugin"
 	},
 	"engines": {
-		"vscode": "^1.26.0"
+		"vscode": "^1.30.0"
 	},
 	"activationEvents": [
 		"onLanguage:php",
 		"workspaceContains:**/*.php"
 	],
 	"main": "./out/extension",
+	"scripts": {
+		"build": "tsc -p .",
+		"watch": "tsc -w -p .",
+		"lint": "tslint -c tslint.json \"src/**/*.ts\"",
+		"semantic-release": "semantic-release"
+	},
 	"contributes": {
 		"configuration": {
 			"type": "object",
@@ -82,30 +88,21 @@
 			}
 		}
 	},
-	"scripts": {
-		"build": "tsc -p .",
-		"watch": "tsc -w -p .",
-		"postinstall": "node ./node_modules/vscode/bin/install",
-		"lint": "tslint -c tslint.json \"src/**/*.ts\"",
-		"semantic-release": "semantic-release"
-	},
 	"devDependencies": {
-		"@commitlint/cli": "7.1.1",
-		"@commitlint/config-conventional": "7.1.1",
-		"@types/mocha": "5.2.5",
-		"@types/mz": "0.0.32",
-		"@types/node": "8.10.29",
-		"@types/semver": "5.5.0",
-		"husky": "1.1.4",
-		"semantic-release": "15.9.12",
-		"semantic-release-vsce": "2.1.2",
-		"tslint": "5.11.0",
-		"typescript": "3.0.3",
-		"vscode": "1.1.21"
+		"@types/mocha": "^2.2.48",
+		"@types/mz": "0.0.31",
+		"@types/node": "^8.10.59",
+		"@types/semver": "^5.5.0",
+		"@types/vscode": "1.30",
+		"tslint": "^5.20.1",
+		"typescript": "^3.7.4",
+		"vsce": "^1.71.0",
+		"vscode-test": "^1.3.0"
 	},
 	"dependencies": {
 		"mz": "^2.7.0",
-		"semver": "^5.5.1",
-		"vscode-languageclient": "^5.1.0"
+		"semantic-release": "^15.14.0",
+		"semver": "^5.7.1",
+		"vscode-languageclient": "^5.2.1"
 	}
 }
