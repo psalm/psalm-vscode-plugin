@@ -4,7 +4,7 @@
 	"description": "VS Code Plugin for Psalm",
 	"author": "Matthew Brown",
 	"license": "MIT",
-	"version": "0.9.0",
+	"version": "1.0.0",
 	"publisher": "getpsalm",
 	"categories": [
 		"Linters",
