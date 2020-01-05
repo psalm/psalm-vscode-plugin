@@ -27,6 +27,16 @@ function isFile(path: string): boolean {
     }
 }
 
+function filterPath(paths: string[], workspacePath: string): string|null {
+    for (var configPath of paths) {
+        if (isFile(path.join(workspacePath, configPath))) {
+            return configPath;
+        }
+    }
+
+    return null;
+}
+
 // Returns true if psalm.psalmScriptPath supports the language server protocol.
 async function checkPsalmHasLanguageServer(context: vscode.ExtensionContext, phpExecutablePath: string, psalmScriptPath: string): Promise<boolean> {
     const exists: boolean = isFile(psalmScriptPath);
