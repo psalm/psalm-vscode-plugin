@@ -59,6 +59,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     const enableDebugLog = conf.get<boolean>('enableDebugLog') || false;
     const connectToServerWithTcp = conf.get<boolean>('connectToServerWithTcp');
     let analyzedFileExtensions: string[] = conf.get<string[]>('analyzedFileExtensions') || ['php'];
+    const psalmConfigPaths: string[] = conf.get<string[]>('configPaths') || ['psalm.xml', 'psalm.xml.dist'];
 
     // Check if the psalmScriptPath setting was provided.
     if (!psalmScriptPath) {
@@ -77,7 +78,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         psalmScriptPath = path.join(workspacePath, psalmScriptPath);
     }
 
-    if (!isFile(path.join(workspacePath, 'psalm.xml')) && !isFile(path.join(workspacePath, 'psalm.xml.dist'))) {
+    const psalmConfigPath = filterPath(psalmConfigPaths, workspacePath);
+    if (psalmConfigPath === null) {
         vscode.window.showErrorMessage('No psalm.xml config found in project root');
         return;
     }
@@ -124,6 +126,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             if (unusedVariableDetection) {
                 args.unshift('--find-dead-code');
             }
+
+            args.unshift('-c', path.join(workspacePath, psalmConfigPath));
 
             // The server is implemented in PHP
             args.unshift(psalmScriptPath);
@@ -180,7 +184,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         synchronize: {
             // Synchronize the setting section 'psalm' to the server (TODO: server side support)
             configurationSection: 'psalm',
-            fileEvents: vscode.workspace.createFileSystemWatcher('**/psalm.xml')
+            fileEvents: vscode.workspace.createFileSystemWatcher('**/' + psalmConfigPath)
         }
     };
     
