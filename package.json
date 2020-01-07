@@ -84,6 +84,14 @@
 					],
 					"default": false,
 					"description": "If this is set to true, this VSCode extension will use TCP instead of the default STDIO to communicate with the Psalm language server. (Modifying requires restart)"
+				},
+				"psalm.configPaths": {
+					"type": "array",
+					"default": [
+						"psalm.xml",
+						"psalm.xml.dist"
+					],
+					"description": "A list of files to checkup for psalm configuration (relative to the workspace directory)"
 				}
 			}
 		}
