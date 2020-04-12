@@ -29,8 +29,11 @@ function isFile(path: string): boolean {
 
 function filterPath(paths: string[], workspacePath: string): string|null {
     for (var configPath of paths) {
-        if (isFile(path.join(workspacePath, configPath))) {
+        if (isFile(configPath)) {
             return configPath;
+        }
+        if (isFile(path.join(workspacePath, configPath))) {
+            return path.join(workspacePath, configPath);
         }
     }
 
@@ -103,7 +106,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         }
         return;
     }
-    
+
     // Parse version and discard OS info like 7.0.8--0ubuntu0.16.04.2
     const match = stdout.match(/^PHP ([^\s]+)/m);
     if (!match) {
@@ -127,12 +130,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 args.unshift('--find-dead-code');
             }
 
-            args.unshift('-c', path.join(workspacePath, psalmConfigPath));
+            args.unshift('-c', psalmConfigPath);
 
             // The server is implemented in PHP
             args.unshift(psalmScriptPath);
             console.log('starting Psalm Language Server', phpExecutablePath, args);
-            
+
             const childProcess = spawn(phpExecutablePath, args, {cwd: dirToAnalyze});
             childProcess.stderr.on('data', (chunk: Buffer) => {
                 console.error(chunk + '');
@@ -184,10 +187,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         synchronize: {
             // Synchronize the setting section 'psalm' to the server (TODO: server side support)
             configurationSection: 'psalm',
-            fileEvents: vscode.workspace.createFileSystemWatcher('**/' + psalmConfigPath)
+            fileEvents: vscode.workspace.createFileSystemWatcher('**/' + path.relative(workspacePath, psalmConfigPath))
         }
     };
-    
+
     // Create the language client and start the client.
     const disposable = new LanguageClient(
         'Psalm Language Server',
