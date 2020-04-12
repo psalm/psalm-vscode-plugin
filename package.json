@@ -33,6 +33,7 @@
 		"lint": "tslint -c tslint.json \"src/**/*.ts\"",
 		"semantic-release": "semantic-release"
 	},
+	"extensionKind": ["workspace"],
 	"contributes": {
 		"configuration": {
 			"type": "object",
