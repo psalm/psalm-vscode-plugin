@@ -1,8 +1,8 @@
-
 import * as path from 'path';
 import { spawn, execFile, ChildProcess } from 'mz/child_process';
 import * as vscode from 'vscode';
 import { LanguageClient, LanguageClientOptions, StreamInfo } from 'vscode-languageclient';
+import { DocumentSelector } from 'vscode-languageserver-protocol';
 import * as semver from 'semver';
 import * as net from 'net';
 import * as url from 'url';
@@ -52,13 +52,23 @@ async function checkPsalmHasLanguageServer(context: vscode.ExtensionContext, php
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     const conf = vscode.workspace.getConfiguration('psalm');
     const phpExecutablePath = conf.get<string>('phpExecutablePath') || 'php';
+    const phpExecutableArgs = conf.get<string>('phpExecutableArgs') ||
+        [
+            '-dxdebug.remote_autostart=0',
+            '-dxdebug.remote_enable=0',
+            '-dxdebug_profiler_enable=0'
+        ];
     const workspaceFolders = vscode.workspace.workspaceFolders;
     const defaultPsalmScriptPath = path.join('vendor', 'vimeo', 'psalm', 'psalm-language-server');
     let psalmScriptPath = conf.get<string>('psalmScriptPath') || defaultPsalmScriptPath;
     const unusedVariableDetection = conf.get<boolean>('unusedVariableDetection') || false;
     const enableDebugLog = conf.get<boolean>('enableDebugLog') || false;
     const connectToServerWithTcp = conf.get<boolean>('connectToServerWithTcp');
-    let analyzedFileExtensions: string[] = conf.get<string[]>('analyzedFileExtensions') || ['php'];
+    let analyzedFileExtensions: undefined|string[]|DocumentSelector = conf.get<string[]|DocumentSelector>('analyzedFileExtensions') || 
+        [
+            { scheme: 'file', language: 'php' },
+            { scheme: 'untitled', language: 'php' }
+        ];
     const psalmConfigPaths: string[] = conf.get<string[]>('configPaths') || ['psalm.xml', 'psalm.xml.dist'];
 
     // Check if the psalmScriptPath setting was provided.
@@ -129,8 +139,21 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
             args.unshift('-c', path.join(workspacePath, psalmConfigPath));
 
+            // end of the psalm language server arguments, so we use the php cli argument separator
+            args.unshift('--');
+
             // The server is implemented in PHP
-            args.unshift(psalmScriptPath);
+            // this goes before the cli argument separator
+            args.unshift('-f', psalmScriptPath);
+
+            if (phpExecutableArgs) {
+                if(Array.isArray(phpExecutableArgs)) {
+                    args.unshift(...phpExecutableArgs);
+                } else {
+                    args.unshift(phpExecutableArgs);
+                }
+            }
+
             console.log('starting Psalm Language Server', phpExecutablePath, args);
             
             const childProcess = spawn(phpExecutablePath, args, {cwd: dirToAnalyze});
@@ -184,18 +207,37 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         synchronize: {
             // Synchronize the setting section 'psalm' to the server (TODO: server side support)
             configurationSection: 'psalm',
-            fileEvents: vscode.workspace.createFileSystemWatcher('**/' + psalmConfigPath)
+            fileEvents: [
+                vscode.workspace.createFileSystemWatcher('**/' + psalmConfigPath),
+                // this is for when files get changed outside of vscode
+                vscode.workspace.createFileSystemWatcher('**/*.php'),
+            ]
         }
     };
     
+    let resolveStartingPromise: undefined|(() => void);
+    vscode.window.setStatusBarMessage("$(extensions) Psalm Language Server is starting ... please wait $(loading~spin)", new Promise((resolve, reject) => {
+        resolveStartingPromise = () => { resolve(); }
+    }));
+
     // Create the language client and start the client.
-    const disposable = new LanguageClient(
+    const lc = new LanguageClient(
         'Psalm Language Server',
         serverOptionsCallbackForDirectory(workspacePath),
         clientOptions
-    ).start();
+    );
 
-    // Push the disposable to the context's subscriptions so that the
+    const disposable = lc.start();
+    
+    // Push the disposable to the context"s subscriptions so that the
     // client can be deactivated on extension deactivation
     context.subscriptions.push(disposable);
+    
+    await lc.onReady();
+
+    // close the loading message in the status bar
+    if (resolveStartingPromise) {
+        resolveStartingPromise();
+    }
+    resolveStartingPromise = undefined;
 }
