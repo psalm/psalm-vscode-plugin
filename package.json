@@ -20,7 +20,7 @@
 		"url": "https://github.com/psalm/psalm-vscode-plugin"
 	},
 	"engines": {
-		"vscode": "^1.30.0"
+		"vscode": "^1.44.0"
 	},
 	"activationEvents": [
 		"onLanguage:php",
@@ -105,6 +105,12 @@
 						"psalm.xml.dist"
 					],
 					"description": "A list of files to checkup for psalm configuration (relative to the workspace directory)"
+				},
+				"psalm.hideStatusMessageWhenRunning": {
+					"type":"boolean",
+					"default": false,
+					"description": "This will hide the Psalm status from the status bar when it is started and running.  This is useful to clear up a cluttered status bar."
+
 				}
 			}
 		}
@@ -113,8 +119,8 @@
 		"@types/mocha": "^2.2.48",
 		"@types/mz": "0.0.31",
 		"@types/node": "^8.10.59",
-		"@types/semver": "^5.5.0",
-		"@types/vscode": "1.30",
+		"@types/semver": "^6.2.1",
+		"@types/vscode": "^1.44.0",
 		"husky": "^3.1.0",
 		"tslint": "^5.20.1",
 		"typescript": "^3.7.4",
@@ -124,7 +130,7 @@
 	"dependencies": {
 		"mz": "^2.7.0",
 		"semantic-release": "^15.14.0",
-		"semver": "^5.7.1",
-		"vscode-languageclient": "^5.2.1"
+		"semver": "^6.3.0",
+		"vscode-languageclient": "^7.0.0-next.1"
 	}
 }

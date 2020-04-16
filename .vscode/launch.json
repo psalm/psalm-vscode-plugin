@@ -6,6 +6,7 @@
 			"name": "Launch Extension",
 			"type": "extensionHost",
 			"request": "launch",
+			"preLaunchTask": "build",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 			  	"--extensionDevelopmentPath=${workspaceRoot}"
