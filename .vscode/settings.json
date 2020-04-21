@@ -6,5 +6,6 @@
 		"out": true // set this to false to include "out" folder in search results
 	},
 	"npm.exclude": ["**/src"],
-	"npm.enableScriptExplorer": true
+	"npm.enableScriptExplorer": true,
+	"typescript.tsdk": "node_modules\\typescript\\lib"
 }

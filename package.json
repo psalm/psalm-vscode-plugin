@@ -4,7 +4,7 @@
 	"description": "VS Code Plugin for Psalm",
 	"author": "Matthew Brown",
 	"license": "MIT",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"publisher": "getpsalm",
 	"categories": [
 		"Linters",
@@ -20,7 +20,7 @@
 		"url": "https://github.com/psalm/psalm-vscode-plugin"
 	},
 	"engines": {
-		"vscode": "^1.30.0"
+		"vscode": "^1.44.0"
 	},
 	"activationEvents": [
 		"onLanguage:php",
@@ -46,6 +46,18 @@
 					"default": null,
 					"description": "Optional, defaults to searching for \"php\". The path to a PHP 7.0+ executable to use to execute the Psalm server. The PHP 7.0+ installation should preferably include and enable the PHP module `pcntl`. (Modifying requires restart)"
 				},
+				"psalm.phpExecutableArgs": {
+					"type": [
+						"array",
+						"null"
+					],
+					"default": [
+						"-dxdebug.remote_autostart=0",
+						"-dxdebug.remote_enable=0",
+						"-dxdebug_profiler_enable=0"
+					],
+					"description": "Optional (Advanced), default is '-dxdebug.remote_autostart=0 -dxdebug.remote_enable=0 -dxdebug_profiler_enable=0'.  Additional PHP executable CLI arguments to use."
+				},
 				"psalm.psalmScriptPath": {
 					"type": [
 						"string",
@@ -66,7 +78,14 @@
 						"array"
 					],
 					"default": [
-						"php"
+						{
+							"scheme": "file",
+							"language": "php"
+						},
+						{
+							"scheme": "untitled",
+							"language": "php"
+						}
 					],
 					"description": "A list of file extensions to request Psalm to analyze. By default, this only includes 'php' (Modifying requires restart)"
 				},
@@ -92,6 +111,11 @@
 						"psalm.xml.dist"
 					],
 					"description": "A list of files to checkup for psalm configuration (relative to the workspace directory)"
+				},
+				"psalm.hideStatusMessageWhenRunning": {
+					"type": "boolean",
+					"default": false,
+					"description": "This will hide the Psalm status from the status bar when it is started and running.  This is useful to clear up a cluttered status bar."
 				}
 			}
 		}
@@ -100,8 +124,8 @@
 		"@types/mocha": "^2.2.48",
 		"@types/mz": "0.0.31",
 		"@types/node": "^8.10.59",
-		"@types/semver": "^5.5.0",
-		"@types/vscode": "1.30",
+		"@types/semver": "^6.2.1",
+		"@types/vscode": "^1.44.0",
 		"husky": "^3.1.0",
 		"tslint": "^5.20.1",
 		"typescript": "^3.7.4",
@@ -111,7 +135,7 @@
 	"dependencies": {
 		"mz": "^2.7.0",
 		"semantic-release": "^15.14.0",
-		"semver": "^5.7.1",
-		"vscode-languageclient": "^5.2.1"
+		"semver": "^6.3.0",
+		"vscode-languageclient": "^7.0.0-next.1"
 	}
 }

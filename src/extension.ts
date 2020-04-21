@@ -1,8 +1,8 @@
-
 import * as path from 'path';
 import { spawn, execFile, ChildProcess } from 'mz/child_process';
 import * as vscode from 'vscode';
 import { LanguageClient, LanguageClientOptions, StreamInfo } from 'vscode-languageclient';
+import { DocumentSelector } from 'vscode-languageserver-protocol';
 import * as semver from 'semver';
 import * as net from 'net';
 import * as url from 'url';
@@ -18,9 +18,9 @@ async function showOpenSettingsPrompt(errorMessage: string): Promise<void> {
     }
 }
 
-function isFile(path: string): boolean {
+function isFile(filePath: string): boolean {
     try {
-        let stat = fs.statSync(path);
+        const stat = fs.statSync(filePath);
         return stat.isFile();
     } catch (e) {
         return false;
@@ -28,7 +28,7 @@ function isFile(path: string): boolean {
 }
 
 function filterPath(paths: string[], workspacePath: string): string|null {
-    for (var configPath of paths) {
+    for (const configPath of paths) {
         if (isFile(path.join(workspacePath, configPath))) {
             return configPath;
         }
@@ -38,7 +38,11 @@ function filterPath(paths: string[], workspacePath: string): string|null {
 }
 
 // Returns true if psalm.psalmScriptPath supports the language server protocol.
-async function checkPsalmHasLanguageServer(context: vscode.ExtensionContext, phpExecutablePath: string, psalmScriptPath: string): Promise<boolean> {
+async function checkPsalmHasLanguageServer(
+    context: vscode.ExtensionContext,
+    phpExecutablePath: string,
+    psalmScriptPath: string
+): Promise<boolean> {
     const exists: boolean = isFile(psalmScriptPath);
 
     if (!exists) {
@@ -49,17 +53,56 @@ async function checkPsalmHasLanguageServer(context: vscode.ExtensionContext, php
     return true;
 }
 
+async function checkPsalmLanguageServerHasOption(
+    context: vscode.ExtensionContext,
+    phpExecutablePath: string,
+    phpExecutableArgs: string|string[]|null,
+    psalmScriptPath: string,
+    option: string
+): Promise<boolean> {
+    let stdout: string;
+    try {
+        const args: string[] = [ '-f', psalmScriptPath, '--', '--help' ];
+        if (phpExecutableArgs) {
+            if (typeof phpExecutableArgs === 'string' && phpExecutableArgs.trim().length > 0) {
+                args.unshift(phpExecutableArgs);
+            } else if (Array.isArray(phpExecutableArgs) && phpExecutableArgs.length > 0) {
+                args.unshift(...phpExecutableArgs);
+            }
+        }
+        [stdout] = await execFile(phpExecutablePath, args);
+        return (new RegExp('(\\b|\\s)' + escapeRegExp(option) + '(?![-_])(\\b|\\s)', 'm')).test(stdout);
+    } catch (err) {
+        return false;
+    }
+}
+
+function escapeRegExp(str: string) {
+    return str.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+  }
+
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     const conf = vscode.workspace.getConfiguration('psalm');
     const phpExecutablePath = conf.get<string>('phpExecutablePath') || 'php';
+    let phpExecutableArgs = conf.get<string>('phpExecutableArgs') ||
+        [
+            '-dxdebug.remote_autostart=0',
+            '-dxdebug.remote_enable=0',
+            '-dxdebug_profiler_enable=0'
+        ];
     const workspaceFolders = vscode.workspace.workspaceFolders;
     const defaultPsalmScriptPath = path.join('vendor', 'vimeo', 'psalm', 'psalm-language-server');
     let psalmScriptPath = conf.get<string>('psalmScriptPath') || defaultPsalmScriptPath;
     const unusedVariableDetection = conf.get<boolean>('unusedVariableDetection') || false;
-    const enableDebugLog = conf.get<boolean>('enableDebugLog') || false;
+    const enableDebugLog = true; // conf.get<boolean>('enableDebugLog') || false;
     const connectToServerWithTcp = conf.get<boolean>('connectToServerWithTcp');
-    let analyzedFileExtensions: string[] = conf.get<string[]>('analyzedFileExtensions') || ['php'];
+    const analyzedFileExtensions: undefined|string[]|DocumentSelector = conf.get<string[]|DocumentSelector>('analyzedFileExtensions') ||
+        [
+            { scheme: 'file', language: 'php' },
+            { scheme: 'untitled', language: 'php' }
+        ];
     const psalmConfigPaths: string[] = conf.get<string[]>('configPaths') || ['psalm.xml', 'psalm.xml.dist'];
+    let hideStatusMessageWhenRunning: boolean = conf.get<boolean>('hideStatusMessageWhenRunning') || false;
 
     // Check if the psalmScriptPath setting was provided.
     if (!psalmScriptPath) {
@@ -103,7 +146,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         }
         return;
     }
-    
+
     // Parse version and discard OS info like 7.0.8--0ubuntu0.16.04.2
     const match = stdout.match(/^PHP ([^\s]+)/m);
     if (!match) {
@@ -120,6 +163,27 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         return;
     }
 
+    if (phpExecutableArgs) {
+        if (typeof phpExecutableArgs === 'string' && phpExecutableArgs.trim().length > 0) {
+            phpExecutableArgs = phpExecutableArgs.trim();
+            if (phpExecutableArgs === '--') {
+                phpExecutableArgs = [];
+            }
+        } else if (Array.isArray(phpExecutableArgs) && phpExecutableArgs.length > 0) {
+            phpExecutableArgs = phpExecutableArgs
+                .map((v) => v.trim())
+                .filter((v) => v.length > 0 && v !== '--');
+        }
+    } else {
+        phpExecutableArgs = [];
+    }
+
+    const psalmHasExtendedDiagnosticCodes: boolean =
+        await checkPsalmLanguageServerHasOption(context, phpExecutablePath, phpExecutableArgs, psalmScriptPath, '--use-extended-diagnostic-codes');
+    const psalmHasVerbose: boolean = enableDebugLog ?
+        await checkPsalmLanguageServerHasOption(context, phpExecutablePath, phpExecutableArgs, psalmScriptPath, '--verbose') :
+        false;
+
     const serverOptionsCallbackForDirectory = (dirToAnalyze: string) => (() => new Promise<ChildProcess | StreamInfo>((resolve, reject) => {
         // Listen on random port
         const spawnServer = (...args: string[]): ChildProcess => {
@@ -127,12 +191,36 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 args.unshift('--find-dead-code');
             }
 
+            if (psalmHasVerbose && enableDebugLog) {
+                args.unshift('--verbose');
+            }
+
+            if (psalmHasExtendedDiagnosticCodes) {
+                // this will add the help link to the diagnostic issue
+                args.unshift('--use-extended-diagnostic-codes');
+            }
+
+            args.unshift('-r', workspacePath);
+
             args.unshift('-c', path.join(workspacePath, psalmConfigPath));
 
+            // end of the psalm language server arguments, so we use the php cli argument separator
+            args.unshift('--');
+
             // The server is implemented in PHP
-            args.unshift(psalmScriptPath);
+            // this goes before the cli argument separator
+            args.unshift('-f', psalmScriptPath);
+
+            if (phpExecutableArgs) {
+                if (Array.isArray(phpExecutableArgs)) {
+                    args.unshift(...phpExecutableArgs);
+                } else {
+                    args.unshift(phpExecutableArgs);
+                }
+            }
+
             console.log('starting Psalm Language Server', phpExecutablePath, args);
-            
+
             const childProcess = spawn(phpExecutablePath, args, {cwd: dirToAnalyze});
             childProcess.stderr.on('data', (chunk: Buffer) => {
                 console.error(chunk + '');
@@ -145,6 +233,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                     console.log('out: ' + chunk);
                 });
             }
+            childProcess.on('exit', (code, signal) => {
+                console.log('Pslam Language Server exited: ' + code + ':' + signal);
+            });
             return childProcess;
         };
         // Use a TCP socket on Windows because of problems with blocking STDIO
@@ -184,18 +275,85 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         synchronize: {
             // Synchronize the setting section 'psalm' to the server (TODO: server side support)
             configurationSection: 'psalm',
-            fileEvents: vscode.workspace.createFileSystemWatcher('**/' + psalmConfigPath)
-        }
+            fileEvents: [
+                vscode.workspace.createFileSystemWatcher('**/' + psalmConfigPath),
+                // this is for when files get changed outside of vscode
+                vscode.workspace.createFileSystemWatcher('**/*.php'),
+            ]
+        },
+        progressOnInitialization: true,
+
     };
-    
+
+    // this has a low priority so it will end up being more towards the right.
+    const psalmStatusBar: vscode.StatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1);
+    psalmStatusBar.text = ' $(loading~spin) Psalm: starting';
+    psalmStatusBar.tooltip = 'Psalm Language Server';
+    psalmStatusBar.show();
+
     // Create the language client and start the client.
-    const disposable = new LanguageClient(
+    const lc = new LanguageClient(
         'Psalm Language Server',
         serverOptionsCallbackForDirectory(workspacePath),
         clientOptions
-    ).start();
+    );
+
+    lc.onTelemetry((params) => {
+        if (typeof params === 'object' && 'message' in params && typeof params.message === 'string') {
+
+            // each time we get a new telemetry, we are going to check the config, and update as needed
+            hideStatusMessageWhenRunning = conf.get<boolean>('hideStatusMessageWhenRunning') || false;
+
+            let status: string = params.message;
+
+            if (params.message.indexOf(':') >= 0) {
+                status = params.message.split(':')[0];
+            }
+
+            let statusIcon = '';
+
+            switch (status) {
+                case 'initializing':
+                    statusIcon = '$(sync~spin)';
+                    break;
+                case 'initialized':
+                    statusIcon = '$(zap)';
+                    break;
+                case 'running':
+                    statusIcon = '$(check)';
+                    break;
+                case 'analyzing':
+                    statusIcon = '$(sync~spin)';
+                    break;
+                case 'closing':
+                    statusIcon = '$(issues)';
+                    break;
+                case 'closed':
+                    statusIcon = '$(error)';
+                    break;
+            }
+
+            psalmStatusBar.text = (statusIcon + ' Psalm: ' + params.message).trim();
+            if (hideStatusMessageWhenRunning && status === 'running') {
+                psalmStatusBar.hide();
+            } else {
+                psalmStatusBar.show();
+            }
+
+        }
+    });
 
     // Push the disposable to the context's subscriptions so that the
     // client can be deactivated on extension deactivation
+    const disposable = lc.start();
     context.subscriptions.push(disposable);
+
+    await lc.onReady();
+
+    psalmStatusBar.text = '$(check) Psalm: running';
+    if (hideStatusMessageWhenRunning) {
+        psalmStatusBar.hide();
+    } else {
+        psalmStatusBar.show();
+    }
 }
