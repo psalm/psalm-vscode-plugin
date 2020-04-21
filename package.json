@@ -78,8 +78,14 @@
 						"array"
 					],
 					"default": [
-						{ "scheme": "file", "language": "php" },
-						{ "scheme": "untitled", "language": "php" }
+						{
+							"scheme": "file",
+							"language": "php"
+						},
+						{
+							"scheme": "untitled",
+							"language": "php"
+						}
 					],
 					"description": "A list of file extensions to request Psalm to analyze. By default, this only includes 'php' (Modifying requires restart)"
 				},
@@ -107,10 +113,9 @@
 					"description": "A list of files to checkup for psalm configuration (relative to the workspace directory)"
 				},
 				"psalm.hideStatusMessageWhenRunning": {
-					"type":"boolean",
+					"type": "boolean",
 					"default": false,
 					"description": "This will hide the Psalm status from the status bar when it is started and running.  This is useful to clear up a cluttered status bar."
-
 				}
 			}
 		}
