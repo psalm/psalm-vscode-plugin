@@ -58,11 +58,12 @@ async function checkPsalmLanguageServerHasOption(
     phpExecutablePath: string,
     phpExecutableArgs: string|string[]|null,
     psalmScriptPath: string,
+    psalmScriptArgs: string[],
     option: string
 ): Promise<boolean> {
     let stdout: string;
     try {
-        const args: string[] = [ '-f', psalmScriptPath, '--', '--help' ];
+        const args: string[] = [ '-f', psalmScriptPath, '--', '--help', ...psalmScriptArgs ];
         if (phpExecutableArgs) {
             if (typeof phpExecutableArgs === 'string' && phpExecutableArgs.trim().length > 0) {
                 args.unshift(phpExecutableArgs);
@@ -178,11 +179,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         phpExecutableArgs = [];
     }
 
+    const psalmHasLanguageServerOption: boolean =
+        await checkPsalmLanguageServerHasOption(context, phpExecutablePath, phpExecutableArgs, psalmScriptPath, [], '--language-server');
+    const psalmScriptArgs = psalmHasLanguageServerOption ? ['--language-server'] : [];
     const psalmHasExtendedDiagnosticCodes: boolean =
-        await checkPsalmLanguageServerHasOption(context, phpExecutablePath, phpExecutableArgs, psalmScriptPath, '--use-extended-diagnostic-codes');
+        await checkPsalmLanguageServerHasOption(context, phpExecutablePath, phpExecutableArgs, psalmScriptPath, psalmScriptArgs,
+            '--use-extended-diagnostic-codes');
     const psalmHasVerbose: boolean = enableDebugLog ?
-        await checkPsalmLanguageServerHasOption(context, phpExecutablePath, phpExecutableArgs, psalmScriptPath, '--verbose') :
-        false;
+        await checkPsalmLanguageServerHasOption(context, phpExecutablePath, phpExecutableArgs, psalmScriptPath, psalmScriptArgs,
+            '--verbose') : false;
 
     const serverOptionsCallbackForDirectory = (dirToAnalyze: string) => (() => new Promise<ChildProcess | StreamInfo>((resolve, reject) => {
         // Listen on random port
@@ -203,6 +208,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             args.unshift('-r', workspacePath);
 
             args.unshift('-c', path.join(workspacePath, psalmConfigPath));
+
+            args.unshift(...psalmScriptArgs);
 
             // end of the psalm language server arguments, so we use the php cli argument separator
             args.unshift('--');
