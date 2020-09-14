@@ -92,8 +92,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             '-dxdebug_profiler_enable=0'
         ];
     const workspaceFolders = vscode.workspace.workspaceFolders;
-    const defaultPsalmScriptPath = path.join('vendor', 'vimeo', 'psalm', 'psalm-language-server');
-    let psalmScriptPath = conf.get<string>('psalmScriptPath') || defaultPsalmScriptPath;
+    const defaultPsalmClientScriptPath = path.join('vendor', 'vimeo', 'psalm', 'psalm');
+    const defaultPsalmServerScriptPath = path.join('vendor', 'vimeo', 'psalm', 'psalm-language-server');
+    let psalmClientScriptPath = conf.get<string>('psalmClientScriptPath') || defaultPsalmClientScriptPath;
+    let psalmServerScriptPath = conf.get<string>('psalmScriptPath') || defaultPsalmServerScriptPath;
     const unusedVariableDetection = conf.get<boolean>('unusedVariableDetection') || false;
     const enableDebugLog = true; // conf.get<boolean>('enableDebugLog') || false;
     const connectToServerWithTcp = conf.get<boolean>('connectToServerWithTcp');
@@ -105,9 +107,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     const psalmConfigPaths: string[] = conf.get<string[]>('configPaths') || ['psalm.xml', 'psalm.xml.dist'];
     let hideStatusMessageWhenRunning: boolean = conf.get<boolean>('hideStatusMessageWhenRunning') || false;
 
-    // Check if the psalmScriptPath setting was provided.
-    if (!psalmScriptPath) {
+    // Check if the psalmServerScriptPath setting was provided.
+    if (!psalmServerScriptPath) {
         await showOpenSettingsPrompt('The setting psalm.psalmScriptPath must be provided (e.g. vendor/bin/psalm-language-server)');
+        return;
+    }
+
+    // Check if the psalmClientScriptPath setting was provided.
+    if (!psalmClientScriptPath) {
+        await showOpenSettingsPrompt('The setting psalm.psalmClientScriptPath must be provided (e.g. vendor/bin/psalm)');
         return;
     }
 
@@ -118,18 +126,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     const workspacePath = workspaceFolders[0].uri.fsPath;
 
-    if (!isFile(psalmScriptPath)) {
-        psalmScriptPath = path.join(workspacePath, psalmScriptPath);
+    if (!isFile(psalmServerScriptPath)) {
+        psalmServerScriptPath = path.join(workspacePath, psalmServerScriptPath);
     }
-
-    const psalmConfigPath = filterPath(psalmConfigPaths, workspacePath);
-    if (psalmConfigPath === null) {
-        vscode.window.showErrorMessage('No psalm.xml config found in project root');
-        return;
+    if (!isFile(psalmClientScriptPath)) {
+        psalmClientScriptPath = path.join(workspacePath, psalmClientScriptPath);
     }
 
     // Check if psalm is installed and supports the language server protocol.
-    const isValidPsalmVersion: boolean = await checkPsalmHasLanguageServer(context, phpExecutablePath, psalmScriptPath);
+    const isValidPsalmVersion: boolean = await checkPsalmHasLanguageServer(context, phpExecutablePath, psalmServerScriptPath);
     if (!isValidPsalmVersion) {
         return;
     }
@@ -179,14 +184,35 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         phpExecutableArgs = [];
     }
 
+    const psalmConfigPath = filterPath(psalmConfigPaths, workspacePath);
+    if (psalmConfigPath === null) {
+        vscode.window.showWarningMessage(
+            'No psalm.xml config found in project root. Want to configure one?',
+            'Yes', 'No'
+        ).then(async result => {
+            if (result == 'Yes') {
+                await execFile(phpExecutablePath, [psalmClientScriptPath, '--init'], {cwd: workspacePath});
+                vscode.window.showInformationMessage(
+                    "Psalm configuration has been initialized. Reload window in order for configuration to take effect.",
+                    "Reload window"
+                ).then(result => {
+                    if (result == "Reload window") {
+                        vscode.commands.executeCommand("workbench.action.reloadWindow");
+                    }
+                });
+            }
+        });
+        return;
+    }
+
     const psalmHasLanguageServerOption: boolean =
-        await checkPsalmLanguageServerHasOption(context, phpExecutablePath, phpExecutableArgs, psalmScriptPath, [], '--language-server');
+        await checkPsalmLanguageServerHasOption(context, phpExecutablePath, phpExecutableArgs, psalmServerScriptPath, [], '--language-server');
     const psalmScriptArgs = psalmHasLanguageServerOption ? ['--language-server'] : [];
     const psalmHasExtendedDiagnosticCodes: boolean =
-        await checkPsalmLanguageServerHasOption(context, phpExecutablePath, phpExecutableArgs, psalmScriptPath, psalmScriptArgs,
+        await checkPsalmLanguageServerHasOption(context, phpExecutablePath, phpExecutableArgs, psalmServerScriptPath, psalmScriptArgs,
             '--use-extended-diagnostic-codes');
     const psalmHasVerbose: boolean = enableDebugLog ?
-        await checkPsalmLanguageServerHasOption(context, phpExecutablePath, phpExecutableArgs, psalmScriptPath, psalmScriptArgs,
+        await checkPsalmLanguageServerHasOption(context, phpExecutablePath, phpExecutableArgs, psalmServerScriptPath, psalmScriptArgs,
             '--verbose') : false;
 
     const serverOptionsCallbackForDirectory = (dirToAnalyze: string) => (() => new Promise<ChildProcess | StreamInfo>((resolve, reject) => {
@@ -216,7 +242,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
             // The server is implemented in PHP
             // this goes before the cli argument separator
-            args.unshift('-f', psalmScriptPath);
+            args.unshift('-f', psalmServerScriptPath);
 
             if (phpExecutableArgs) {
                 if (Array.isArray(phpExecutableArgs)) {
@@ -241,7 +267,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 });
             }
             childProcess.on('exit', (code, signal) => {
-                console.log('Pslam Language Server exited: ' + code + ':' + signal);
+                console.log('Psalm Language Server exited: ' + code + ':' + signal);
             });
             return childProcess;
         };
