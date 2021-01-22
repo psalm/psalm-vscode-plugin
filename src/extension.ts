@@ -300,6 +300,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     // Create the language client and start the client.
     const lc = new LanguageClient(
+        'psalmLanguageServer',
         'Psalm Language Server',
         serverOptionsCallbackForDirectory(workspacePath),
         clientOptions
