@@ -66,6 +66,14 @@
 					"default": null,
 					"description": "Optional (Advanced). If provided, this overrides the Psalm script to use, e.g. vendor/bin/psalm-language-server. (Modifying requires restart)"
 				},
+				"psalm.psalmClientScriptPath": {
+					"type": [
+						"string",
+						"null"
+					],
+					"default": null,
+					"description": "Optional (Advanced). If provided, this overrides the Psalm script to use, e.g. vendor/bin/psalm. (Modifying requires restart)"
+				},
 				"psalm.enableDebugLog": {
 					"type": [
 						"boolean"
