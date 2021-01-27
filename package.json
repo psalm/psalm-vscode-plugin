@@ -24,7 +24,8 @@
 	},
 	"activationEvents": [
 		"onLanguage:php",
-		"workspaceContains:**/*.php"
+        	"workspaceContains:psalm.xml",
+		"workspaceContains:psalm.xml.dist"
 	],
 	"main": "./out/extension",
 	"scripts": {
