@@ -8,6 +8,8 @@ import * as net from 'net';
 import * as url from 'url';
 import * as fs from 'fs';
 
+import { registerCommands } from './commands';
+
 async function showOpenSettingsPrompt(errorMessage: string): Promise<void> {
     const selected = await vscode.window.showErrorMessage(
         errorMessage,
@@ -380,7 +382,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // Push the disposable to the context's subscriptions so that the
     // client can be deactivated on extension deactivation
     const disposable = lc.start();
-    context.subscriptions.push(disposable);
+    context.subscriptions.push(...registerCommands(lc), disposable);
 
     await lc.onReady();
 
