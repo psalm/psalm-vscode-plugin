@@ -127,6 +127,20 @@
 					"description": "This will hide the Psalm status from the status bar when it is started and running.  This is useful to clear up a cluttered status bar."
 				}
 			}
+		},
+		"commands": [
+			{
+				"command": "psalm.restartPsalmServer",
+				"title": "Restart Psalm Language server",
+				"category": "psalm"
+			}
+		],
+		"menus": {
+			"commandPalette": [
+				{
+					"command": "psalm.restartPsalmServer"
+				}
+			]
 		}
 	},
 	"devDependencies": {
