@@ -24,7 +24,7 @@
 	},
 	"activationEvents": [
 		"onLanguage:php",
-        	"workspaceContains:psalm.xml",
+		"workspaceContains:psalm.xml",
 		"workspaceContains:psalm.xml.dist"
 	],
 	"main": "./out/extension",
@@ -74,6 +74,11 @@
 					],
 					"default": null,
 					"description": "Optional (Advanced). If provided, this overrides the Psalm script to use, e.g. vendor/bin/psalm. (Modifying requires restart)"
+				},
+				"psalm.enableIniDefaults": {
+					"type": "boolean",
+					"default": false,
+					"description": "Enable this to use PHP-provided ini defaults for memory and error display. (Modifying requires restart)"
 				},
 				"psalm.enableDebugLog": {
 					"type": [

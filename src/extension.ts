@@ -98,6 +98,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     const defaultPsalmServerScriptPath = path.join('vendor', 'vimeo', 'psalm', 'psalm-language-server');
     let psalmClientScriptPath = conf.get<string>('psalmClientScriptPath') || defaultPsalmClientScriptPath;
     let psalmServerScriptPath = conf.get<string>('psalmScriptPath') || defaultPsalmServerScriptPath;
+    const enableIniDefaults = conf.get<boolean>('enableIniDefaults') || false;
     const unusedVariableDetection = conf.get<boolean>('unusedVariableDetection') || false;
     const enableDebugLog = true; // conf.get<boolean>('enableDebugLog') || false;
     const connectToServerWithTcp = conf.get<boolean>('connectToServerWithTcp');
@@ -216,6 +217,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     const psalmHasVerbose: boolean = enableDebugLog ?
         await checkPsalmLanguageServerHasOption(context, phpExecutablePath, phpExecutableArgs, psalmServerScriptPath, psalmScriptArgs,
             '--verbose') : false;
+    const psalmHasIniDefaults: boolean = enableIniDefaults ?
+        await checkPsalmLanguageServerHasOption(context, phpExecutablePath, phpExecutableArgs, psalmServerScriptPath, psalmScriptArgs,
+            '--use-ini-defaults') : false;
 
     const serverOptionsCallbackForDirectory = (dirToAnalyze: string) => (() => new Promise<ChildProcess | StreamInfo>((resolve, reject) => {
         // Listen on random port
@@ -226,6 +230,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
             if (psalmHasVerbose && enableDebugLog) {
                 args.unshift('--verbose');
+            }
+
+            if (psalmHasIniDefaults && enableIniDefaults) {
+                args.unshift('--use-ini-defaults');
             }
 
             if (psalmHasExtendedDiagnosticCodes) {
