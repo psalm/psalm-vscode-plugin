@@ -1,11 +1,20 @@
 {
-	"files.exclude": {
-		"out": false // set this to true to hide the "out" folder with the compiled JS files
-	},
-	"search.exclude": {
-		"out": true // set this to false to include "out" folder in search results
-	},
-	"npm.exclude": ["**/src"],
-	"npm.enableScriptExplorer": true,
-	"typescript.tsdk": "node_modules\\typescript\\lib"
+    "files.exclude": {
+        "out": false // set this to true to hide the "out" folder with the compiled JS files
+    },
+    "search.exclude": {
+        "out": true // set this to false to include "out" folder in search results
+    },
+    "npm.exclude": ["**/src"],
+    "typescript.tsdk": "node_modules\\typescript\\lib",
+    // Set the default
+    "editor.formatOnSave": false,
+    // Enable per-language
+    "[javascript]": {
+        "editor.formatOnSave": true
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "psalmLanguageServer.trace.server": "message"
 }

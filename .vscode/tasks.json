@@ -1,20 +1,24 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-		  "label": "build",
-		  "type": "npm",
-		  "script": "build",
-		  "problemMatcher": [
-				"$tsc"
-		  ]
-		},
-		{
-		  "type": "npm",
-		  "script": "watch",
-		  "problemMatcher": [
-				"$tsc-watch"
-		  ]
-		}
-	  ]
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "npm",
+            "script": "build",
+            "problemMatcher": ["$tsc"]
+        },
+        {
+            "type": "npm",
+            "script": "watch",
+            "problemMatcher": ["$tsc-watch"],
+            "isBackground": true,
+            "presentation": {
+                "reveal": "never"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
 }
