@@ -40,18 +40,15 @@
 			"title": "PHP - Psalm Analyzer",
 			"properties": {
 				"psalm.phpExecutablePath": {
-					"type": [
-						"string",
-						"null"
-					],
+					"type": "string",
 					"default": null,
 					"description": "Optional, defaults to searching for \"php\". The path to a PHP 7.0+ executable to use to execute the Psalm server. The PHP 7.0+ installation should preferably include and enable the PHP module `pcntl`. (Modifying requires restart)"
 				},
 				"psalm.phpExecutableArgs": {
-					"type": [
-						"array",
-						"null"
-					],
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
 					"default": [
 						"-dxdebug.remote_autostart=0",
 						"-dxdebug.remote_enable=0",
@@ -60,32 +57,22 @@
 					"description": "Optional (Advanced), default is '-dxdebug.remote_autostart=0 -dxdebug.remote_enable=0 -dxdebug_profiler_enable=0'.  Additional PHP executable CLI arguments to use."
 				},
 				"psalm.psalmScriptPath": {
-					"type": [
-						"string",
-						"null"
-					],
+					"type": "string",
 					"default": null,
 					"description": "Optional (Advanced). If provided, this overrides the Psalm script to use, e.g. vendor/bin/psalm-language-server. (Modifying requires restart)"
 				},
 				"psalm.psalmClientScriptPath": {
-					"type": [
-						"string",
-						"null"
-					],
+					"type": "string",
 					"default": null,
 					"description": "Optional (Advanced). If provided, this overrides the Psalm script to use, e.g. vendor/bin/psalm. (Modifying requires restart)"
 				},
 				"psalm.enableDebugLog": {
-					"type": [
-						"boolean"
-					],
+					"type": "boolean",
 					"default": false,
 					"description": "Enable this to print messages to the debug console when developing or debugging this VS Code extension. (Modifying requires restart)"
 				},
 				"psalm.analyzedFileExtensions": {
-					"type": [
-						"array"
-					],
+					"type": "array",
 					"default": [
 						{
 							"scheme": "file",
@@ -99,22 +86,20 @@
 					"description": "A list of file extensions to request Psalm to analyze. By default, this only includes 'php' (Modifying requires restart)"
 				},
 				"psalm.unusedVariableDetection": {
-					"type": [
-						"boolean"
-					],
+					"type": "boolean",
 					"default": false,
 					"description": "Enable this to enable unused variable and parameter detection"
 				},
 				"psalm.connectToServerWithTcp": {
-					"type": [
-						"boolean",
-						"null"
-					],
+					"type": "boolean",
 					"default": false,
 					"description": "If this is set to true, this VSCode extension will use TCP instead of the default STDIO to communicate with the Psalm language server. (Modifying requires restart)"
 				},
 				"psalm.configPaths": {
 					"type": "array",
+					"items": {
+						"type": "string"
+					},
 					"default": [
 						"psalm.xml",
 						"psalm.xml.dist"
