@@ -32,7 +32,8 @@
 		"build": "tsc -p .",
 		"watch": "tsc -w -p .",
 		"lint": "tslint -c tslint.json \"src/**/*.ts\"",
-		"semantic-release": "semantic-release"
+		"semantic-release": "semantic-release",
+		"prepare": "husky install"
 	},
 	"contributes": {
 		"configuration": {
