@@ -13,7 +13,6 @@ import * as semver from 'semver';
 import * as net from 'net';
 import * as url from 'url';
 import * as fs from 'fs';
-import compareVersions from 'compare-versions';
 import which from 'which';
 
 import { registerCommands } from './commands';
@@ -367,7 +366,7 @@ export async function activate(
     let psalmHasVerbose = false;
     if (
         languageServerVersion === null ||
-        compareVersions.compare('4.8.1', languageServerVersion, '>=')
+        semver.lt('4.8.2', languageServerVersion)
     ) {
         psalmHasExtendedDiagnosticCodes =
             await checkPsalmLanguageServerHasOption(
@@ -388,7 +387,7 @@ export async function activate(
                   '--verbose'
               )
             : false;
-    } else if (compareVersions.compare('4.8.1', languageServerVersion, '<')) {
+    } else if (semver.gt('4.8.1', languageServerVersion)) {
         console.log(`Psalm Language Server Version: ${languageServerVersion}`);
         psalmHasExtendedDiagnosticCodes = true;
         psalmScriptArgs = ['--language-server'];
