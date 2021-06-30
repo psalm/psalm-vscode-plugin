@@ -71,11 +71,6 @@ async function checkPsalmHasLanguageServer(
 
 /**
  * Get the Psalm Language Server Version
- * @param context
- * @param phpExecutablePath
- * @param phpExecutableArgs
- * @param psalmScriptPath
- * @returns
  */
 async function getPsalmLanguageServerVersion(
     context: vscode.ExtensionContext,
@@ -100,7 +95,7 @@ async function getPsalmLanguageServerVersion(
             }
         }
         ({ stdout } = await execFile(phpExecutablePath, args));
-        //Psalm 4.8.1@f73f2299dbc59a3e6c4d66cff4605176e728ee69
+        // Psalm 4.8.1@f73f2299dbc59a3e6c4d66cff4605176e728ee69
         const ret = String(stdout).match(
             /^Psalm\s*((?:[0-9]+\.?)+)@([0-9a-f]{40})/
         );
@@ -115,7 +110,7 @@ async function getPsalmLanguageServerVersion(
                 String(err.message)
             )
         ) {
-            //Could technically return  4.8.1
+            // Could technically return  4.8.1
             return null;
         }
         return null;
@@ -124,13 +119,6 @@ async function getPsalmLanguageServerVersion(
 
 /**
  * Check if the Psalm Language Server has an option
- * @param context
- * @param phpExecutablePath
- * @param phpExecutableArgs
- * @param psalmScriptPath
- * @param psalmScriptArgs
- * @param option
- * @returns
  */
 async function checkPsalmLanguageServerHasOption(
     context: vscode.ExtensionContext,
@@ -180,7 +168,8 @@ export async function activate(
     context: vscode.ExtensionContext
 ): Promise<void> {
     const conf = vscode.workspace.getConfiguration('psalm');
-    const phpExecutablePath = conf.get<string>('phpExecutablePath') || await which('php');
+    const phpExecutablePath =
+        conf.get<string>('phpExecutablePath') || (await which('php'));
     let phpExecutableArgs = conf.get<string>('phpExecutableArgs') || [
         '-dxdebug.remote_autostart=0',
         '-dxdebug.remote_enable=0',
@@ -210,7 +199,7 @@ export async function activate(
     const connectToServerWithTcp = conf.get<boolean>('connectToServerWithTcp');
     const analyzedFileExtensions: undefined | string[] | DocumentSelector =
         conf.get<string[] | DocumentSelector>('analyzedFileExtensions') || [
-            { scheme: 'file', language: 'php' }
+            { scheme: 'file', language: 'php' },
         ];
     const psalmConfigPaths: string[] = conf.get<string[]>('configPaths') || [
         'psalm.xml',
@@ -359,8 +348,8 @@ export async function activate(
             psalmServerScriptPath
         );
 
-    //Are we running psalm or psalm-language-server
-    //if we are runing psalm them we need to forward to psalm-language-server
+    // Are we running psalm or psalm-language-server
+    // if we are runing psalm them we need to forward to psalm-language-server
     const psalmHasLanguageServerOption: boolean =
         await checkPsalmLanguageServerHasOption(
             context,
@@ -374,8 +363,8 @@ export async function activate(
     let psalmScriptArgs: string[] = psalmHasLanguageServerOption
         ? ['--language-server']
         : [];
-    let psalmHasExtendedDiagnosticCodes: boolean = false;
-    let psalmHasVerbose: boolean = false;
+    let psalmHasExtendedDiagnosticCodes = false;
+    let psalmHasVerbose = false;
     if (
         languageServerVersion === null ||
         compareVersions.compare('4.8.1', languageServerVersion, '>=')
@@ -488,7 +477,8 @@ export async function activate(
                     }
 
                     childProcess.on('exit', (code, signal) => {
-                        statusBar.text = '$(error) Psalm: Exited (Should Restart)';
+                        statusBar.text =
+                            '$(error) Psalm: Exited (Should Restart)';
                         console.log(
                             'Psalm Language Server exited: ' +
                                 code +
@@ -603,11 +593,8 @@ export async function activate(
                     break;
             }
 
-            psalmStatusBar.text = (
-                statusIcon +
-                ' Psalm: ' +
-                params.message
-            ).trim();
+            psalmStatusBar.text =
+                `${statusIcon} Psalm: ${params.message}`.trim();
             if (hideStatusMessageWhenRunning && status === 'running') {
                 psalmStatusBar.hide();
             } else {

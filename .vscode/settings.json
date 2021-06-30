@@ -8,7 +8,7 @@
     "npm.exclude": ["**/src"],
     "typescript.tsdk": "node_modules\\typescript\\lib",
     // Set the default
-    "editor.formatOnSave": false,
+    "editor.formatOnSave": true,
     // Enable per-language
     "[javascript]": {
         "editor.formatOnSave": true
