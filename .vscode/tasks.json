@@ -4,13 +4,33 @@
         {
             "label": "build",
             "type": "npm",
-            "script": "build",
+            "script": "webpack",
             "problemMatcher": ["$tsc"]
         },
         {
             "type": "npm",
-            "script": "watch",
-            "problemMatcher": ["$tsc-watch"],
+            "script": "webpack-dev",
+            "problemMatcher": {
+                "owner": "webpack",
+				"severity": "error",
+				"fileLocation": "absolute",
+				"pattern": [
+					{
+						"regexp": "ERROR in [^ ]* (.*):(.*):(.*)",
+						"file": 1,
+						"line": 2,
+						"column": 3
+					},
+					{
+						"regexp": ".*",
+						"message": 0
+					}
+				],
+				"background": {
+					"beginsPattern": "runtime modules",
+					"endsPattern": "compiled successfully"
+				}
+            },
             "isBackground": true,
             "presentation": {
                 "reveal": "never"

@@ -14,6 +14,7 @@ import * as net from 'net';
 import * as url from 'url';
 import * as fs from 'fs';
 import compareVersions from 'compare-versions';
+import which from 'which';
 
 import { registerCommands } from './commands';
 import { Writable } from 'stream';
@@ -179,7 +180,7 @@ export async function activate(
     context: vscode.ExtensionContext
 ): Promise<void> {
     const conf = vscode.workspace.getConfiguration('psalm');
-    const phpExecutablePath = conf.get<string>('phpExecutablePath') || 'php';
+    const phpExecutablePath = conf.get<string>('phpExecutablePath') || await which('php');
     let phpExecutableArgs = conf.get<string>('phpExecutableArgs') || [
         '-dxdebug.remote_autostart=0',
         '-dxdebug.remote_enable=0',
@@ -209,8 +210,7 @@ export async function activate(
     const connectToServerWithTcp = conf.get<boolean>('connectToServerWithTcp');
     const analyzedFileExtensions: undefined | string[] | DocumentSelector =
         conf.get<string[] | DocumentSelector>('analyzedFileExtensions') || [
-            { scheme: 'file', language: 'php' },
-            { scheme: 'untitled', language: 'php' },
+            { scheme: 'file', language: 'php' }
         ];
     const psalmConfigPaths: string[] = conf.get<string[]>('configPaths') || [
         'psalm.xml',
@@ -535,7 +535,7 @@ export async function activate(
             protocol2Code: (str) => vscode.Uri.parse(str),
         },
         synchronize: {
-            // Synchronize the setting section 'psalm' to the server (TODO: server side support)
+            // Synchronize the setting section 'psalm' to the server
             configurationSection: 'psalm',
             fileEvents: [
                 vscode.workspace.createFileSystemWatcher(
