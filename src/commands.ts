@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { LanguageClient, ExitNotification } from 'vscode-languageclient/node';
-import compareVersions from 'compare-versions';
+import * as semver from 'semver';
 interface Command {
     id: string;
     execute(): void;
@@ -17,16 +17,14 @@ function analyzeWorkSpace(
         async execute() {
             console.log(client.info);
             if (languageServerVersion === null) {
-                if(!warned) {
+                if (!warned) {
                     await vscode.window.showWarningMessage(
                         'This version of Psalm has a bug in that the only way to force the Language Server to re-analyze the workspace is to forcefully crash it. VSCode limitations only allow us to do this 5 times per session'
                     );
                 }
                 warned = true;
                 client.sendNotification(ExitNotification.type);
-            } else if (
-                compareVersions.compare('4.8.1', languageServerVersion, '<')
-            ) {
+            } else if (semver.gt('4.8.1', languageServerVersion)) {
                 await client.stop();
                 client.start();
             }
@@ -43,16 +41,14 @@ function restartPsalmServer(
         id: 'psalm.restartPsalmServer',
         async execute() {
             if (languageServerVersion === null) {
-                if(!warned) {
+                if (!warned) {
                     await vscode.window.showWarningMessage(
                         'This version of Psalm has a bug in that the only way to restart the Language Server is to forcefully crash it. VSCode limitations only allow us to do this 5 times per session'
                     );
                 }
                 warned = true;
                 client.sendNotification(ExitNotification.type);
-            } else if (
-                compareVersions.compare('4.8.1', languageServerVersion, '<')
-            ) {
+            } else if (semver.gt('4.8.1', languageServerVersion)) {
                 await client.stop();
                 client.start();
             }
@@ -67,7 +63,7 @@ export function registerCommands(
 ): vscode.Disposable[] {
     const commands: Command[] = [
         restartPsalmServer(client, languageServerVersion),
-        analyzeWorkSpace(client, languageServerVersion)
+        analyzeWorkSpace(client, languageServerVersion),
     ];
 
     const disposables = commands.map((command) => {
