@@ -58,9 +58,8 @@ async function checkPsalmHasLanguageServer(
     const exists: boolean = isFile(psalmScriptPath);
 
     if (!exists) {
-        await showOpenSettingsPrompt(
-            'The setting psalm.psalmScriptPath refers to a path that does not exist. path: ' +
-                psalmScriptPath
+        console.log(
+            `The setting psalm.psalmScriptPath refers to a path that does not exist. path: ${psalmScriptPath}`
         );
         return false;
     }
@@ -254,7 +253,7 @@ export async function activate(
     } catch (err) {
         if (err.code === 'ENOENT') {
             await showOpenSettingsPrompt(
-                'PHP executable not found. Install PHP 7 and add it to your PATH or set the psalm.phpExecutablePath setting'
+                'PHP executable not found. Install PHP 7+ and add it to your PATH or set the psalm.phpExecutablePath setting'
             );
         } else {
             vscode.window.showErrorMessage(
@@ -309,33 +308,26 @@ export async function activate(
 
     const psalmConfigPath = filterPath(psalmConfigPaths, workspacePath);
     if (psalmConfigPath === null) {
-        vscode.window
-            .showWarningMessage(
-                'No psalm.xml config found in project root. Want to configure one?',
-                'Yes',
-                'No'
-            )
-            .then(async (result) => {
-                if (result === 'Yes') {
-                    await execFile(
-                        phpExecutablePath,
-                        [psalmClientScriptPath, '--init'],
-                        { cwd: workspacePath }
-                    );
-                    vscode.window
-                        .showInformationMessage(
-                            'Psalm configuration has been initialized. Reload window in order for configuration to take effect.',
-                            'Reload window'
-                        )
-                        .then((res) => {
-                            if (res === 'Reload window') {
-                                vscode.commands.executeCommand(
-                                    'workbench.action.reloadWindow'
-                                );
-                            }
-                        });
-                }
-            });
+        const res = await vscode.window.showWarningMessage(
+            'No psalm.xml config found in project root. Want to configure one?',
+            'Yes',
+            'No'
+        );
+
+        if (res === 'Yes') {
+            await execFile(
+                phpExecutablePath,
+                [psalmClientScriptPath, '--init'],
+                { cwd: workspacePath }
+            );
+            const res1 = await vscode.window.showInformationMessage(
+                'Psalm configuration has been initialized. Reload window in order for configuration to take effect.',
+                'Reload window'
+            );
+            if (res1 === 'Reload window') {
+                vscode.commands.executeCommand('workbench.action.reloadWindow');
+            }
+        }
         return;
     }
 
@@ -478,6 +470,7 @@ export async function activate(
                     childProcess.on('exit', (code, signal) => {
                         statusBar.text =
                             '$(error) Psalm: Exited (Should Restart)';
+                        statusBar.show();
                         console.log(
                             'Psalm Language Server exited: ' +
                                 code +

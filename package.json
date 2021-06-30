@@ -3,9 +3,13 @@
 	"displayName": "Psalm (PHP Static Analysis Linting Machine)",
 	"description": "VS Code Plugin for Psalm",
 	"author": "Matthew Brown",
+	"contributors": [
+		{"name": "Andrew Nagy"},
+		{"name": "Anthony Rainer"}
+	],
 	"license": "MIT",
-	"version": "2.0.0",
-	"publisher": "AndrewNagyDev",
+	"version": "2.0.1",
+	"publisher": "Clearlyip",
 	"categories": [
 		"Linters",
 		"Programming Languages"
@@ -24,8 +28,8 @@
 	},
 	"activationEvents": [
 		"onLanguage:php",
-		"workspaceContains:psalm.xml",
-		"workspaceContains:psalm.xml.dist"
+		"workspaceContains:**/psalm.xml",
+		"workspaceContains:**/psalm.xml.dist"
 	],
 	"main": "./dist/extension",
 	"scripts": {
