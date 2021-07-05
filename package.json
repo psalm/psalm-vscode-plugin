@@ -157,7 +157,7 @@
 	},
 	"dependencies": {
 		"mz": "^2.7.0",
-		"semantic-release": "^17.2.3",
+		"semantic-release": "^17.4.4",
 		"semver": "^6.3.0",
 		"vscode-languageclient": "^7.0.0-next.1"
 	}
