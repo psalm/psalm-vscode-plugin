@@ -12,24 +12,24 @@
             "script": "webpack-dev",
             "problemMatcher": {
                 "owner": "webpack",
-				"severity": "error",
-				"fileLocation": "absolute",
-				"pattern": [
-					{
-						"regexp": "ERROR in [^ ]* (.*):(.*):(.*)",
-						"file": 1,
-						"line": 2,
-						"column": 3
-					},
-					{
-						"regexp": ".*",
-						"message": 0
-					}
-				],
-				"background": {
-					"beginsPattern": "runtime modules",
-					"endsPattern": "compiled successfully"
-				}
+                "severity": "error",
+                "fileLocation": "absolute",
+                "pattern": [
+                    {
+                        "regexp": "ERROR in (.+)((d+),(d+))",
+                        "file": 1,
+                        "line": 2,
+                        "column": 3
+                    },
+                    {
+                        "regexp": ".*",
+                        "message": 0
+                    }
+                ],
+                "background": {
+                    "beginsPattern": "asset",
+                    "endsPattern": "compiled successfully"
+                }
             },
             "isBackground": true,
             "presentation": {

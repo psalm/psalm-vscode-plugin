@@ -1,174 +1,114 @@
-import * as path from 'path';
-import { execFile } from 'promisify-child-process';
-import { spawn, ChildProcess } from 'child_process';
 import * as vscode from 'vscode';
-import {
-    LanguageClient,
-    LanguageClientOptions,
-    ServerOptions,
-    StreamInfo,
-} from 'vscode-languageclient/node';
-import { DocumentSelector } from 'vscode-languageserver-protocol';
-import * as semver from 'semver';
-import * as net from 'net';
-import * as url from 'url';
-import * as fs from 'fs';
-import which from 'which';
-
+import { StatusBar } from './StatusBar';
+import { LoggingService } from './LoggingService';
+import { ConfigurationService } from './ConfigurationService';
+import { LanguageServer } from './LanguageServer';
 import { registerCommands } from './commands';
-import { Writable } from 'stream';
-
-async function showOpenSettingsPrompt(errorMessage: string): Promise<void> {
-    const selected = await vscode.window.showErrorMessage(
-        errorMessage,
-        'Open settings'
-    );
-    if (selected === 'Open settings') {
-        await vscode.commands.executeCommand(
-            'workbench.action.openGlobalSettings'
-        );
-    }
-}
-
-function isFile(filePath: string): boolean {
-    try {
-        const stat = fs.statSync(filePath);
-        return stat.isFile();
-    } catch (e) {
-        return false;
-    }
-}
-
-function filterPath(paths: string[], workspacePath: string): string | null {
-    for (const configPath of paths) {
-        if (isFile(path.join(workspacePath, configPath))) {
-            return configPath;
-        }
-    }
-
-    return null;
-}
-
-// Returns true if psalm.psalmScriptPath supports the language server protocol.
-async function checkPsalmHasLanguageServer(
-    context: vscode.ExtensionContext,
-    phpExecutablePath: string,
-    psalmScriptPath: string
-): Promise<boolean> {
-    const exists: boolean = isFile(psalmScriptPath);
-
-    if (!exists) {
-        console.log(
-            `The setting psalm.psalmScriptPath refers to a path that does not exist. path: ${psalmScriptPath}`
-        );
-        return false;
-    }
-
-    return true;
-}
+import { showWarningMessage } from './utils';
 
 /**
- * Get the Psalm Language Server Version
+ * Activate the extension.
+ *
+ * NOTE: This is only ever run once so it's safe to listen to events here
  */
-async function getPsalmLanguageServerVersion(
-    context: vscode.ExtensionContext,
-    phpExecutablePath: string,
-    phpExecutableArgs: string | string[] | null,
-    psalmScriptPath: string
-): Promise<string | null> {
-    let stdout: string | Buffer | null | undefined;
-    try {
-        const args: string[] = ['-f', psalmScriptPath, '--', '--version'];
-        if (phpExecutableArgs) {
-            if (
-                typeof phpExecutableArgs === 'string' &&
-                phpExecutableArgs.trim().length > 0
-            ) {
-                args.unshift(phpExecutableArgs);
-            } else if (
-                Array.isArray(phpExecutableArgs) &&
-                phpExecutableArgs.length > 0
-            ) {
-                args.unshift(...phpExecutableArgs);
-            }
-        }
-        ({ stdout } = await execFile(phpExecutablePath, args));
-        // Psalm 4.8.1@f73f2299dbc59a3e6c4d66cff4605176e728ee69
-        const ret = String(stdout).match(
-            /^Psalm\s*((?:[0-9]+\.?)+)@([0-9a-f]{40})/
-        );
-        if (ret === null || ret.length !== 3) {
-            return null;
-        }
-        const [, version] = ret;
-        return version;
-    } catch (err) {
-        if (
-            /Use of undefined constant PSALM_VERSION - assumed 'PSALM_VERSION'/g.test(
-                String(err.message)
-            )
-        ) {
-            // Could technically return  4.8.1
-            return null;
-        }
-        return null;
-    }
-}
-
-/**
- * Check if the Psalm Language Server has an option
- */
-async function checkPsalmLanguageServerHasOption(
-    context: vscode.ExtensionContext,
-    phpExecutablePath: string,
-    phpExecutableArgs: string | string[] | null,
-    psalmScriptPath: string,
-    psalmScriptArgs: string[],
-    option: string
-): Promise<boolean> {
-    let stdout: string | Buffer | null | undefined;
-    try {
-        const args: string[] = [
-            '-f',
-            psalmScriptPath,
-            '--',
-            '--help',
-            ...psalmScriptArgs,
-        ];
-        if (phpExecutableArgs) {
-            if (
-                typeof phpExecutableArgs === 'string' &&
-                phpExecutableArgs.trim().length > 0
-            ) {
-                args.unshift(phpExecutableArgs);
-            } else if (
-                Array.isArray(phpExecutableArgs) &&
-                phpExecutableArgs.length > 0
-            ) {
-                args.unshift(...phpExecutableArgs);
-            }
-        }
-        ({ stdout } = await execFile(phpExecutablePath, args));
-        return new RegExp(
-            '(\\b|\\s)' + escapeRegExp(option) + '(?![-_])(\\b|\\s)',
-            'm'
-        ).test(String(stdout));
-    } catch (err) {
-        return false;
-    }
-}
-
-function escapeRegExp(str: string) {
-    return str.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
-}
-
 export async function activate(
     context: vscode.ExtensionContext
 ): Promise<void> {
-    const conf = vscode.workspace.getConfiguration('psalm');
+    // @ts-ignore
+    const loggingService = new LoggingService();
+    // @ts-ignore
+    const configurationService = new ConfigurationService();
+    await configurationService.init();
+    // @ts-ignore
+    const statusBar = new StatusBar();
+
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+
+    if (!workspaceFolders) {
+        loggingService.logError(
+            'Psalm must be run in a workspace. Select a workspace and reload the window'
+        );
+        return;
+    }
+
+    const workspacePath = workspaceFolders[0].uri.fsPath;
+
+    const configPaths = configurationService.get<string[]>('configPaths') || [];
+
+    if (!configPaths.length) {
+        loggingService.logError(
+            'No Config Paths defined. Define some and reload the window'
+        );
+        return;
+    }
+
+    const psalmXML = await vscode.workspace.findFiles(
+        `{${configPaths.join(',')}}`
+        // `**/vendor/**/{${configPaths.join(',')}}`
+    );
+    if (!psalmXML.length) {
+        // no psalm.xml found
+        loggingService.logError(
+            `No Config file found in: ${configPaths.join(',')}`
+        );
+        return;
+    }
+    const configXml = psalmXML[0].path;
+
+    loggingService.logDebug(`Found config file: ${configXml}`);
+
+    const configWatcher = vscode.workspace.createFileSystemWatcher(configXml);
+
+    const languageServer = new LanguageServer(
+        context,
+        workspacePath,
+        configXml,
+        statusBar,
+        configurationService,
+        loggingService
+    );
+
+    const onConfigChange = () => {
+        loggingService.logInfo(`Config file changed: ${configXml}`);
+        languageServer.restart();
+    };
+
+    const onConfigDelete = () => {
+        loggingService.logInfo(`Config file deleted: ${configXml}`);
+        languageServer.stop();
+    };
+
+    // Restart the language server when the tracked config file changes
+    configWatcher.onDidChange(onConfigChange);
+    configWatcher.onDidCreate(onConfigChange);
+    configWatcher.onDidDelete(onConfigDelete);
+
+    // Start Lanuage Server
+    await languageServer.start();
+
+    context.subscriptions.push(...registerCommands(languageServer));
+
+    vscode.workspace.onDidChangeConfiguration(async (change) => {
+        if (
+            !change.affectsConfiguration('psalm') ||
+            change.affectsConfiguration('psalm.hideStatusMessageWhenRunning')
+        ) {
+            return;
+        }
+        loggingService.logDebug('Configuration changed');
+        showWarningMessage(
+            'You will need to reload this window for the new configuration to take effect'
+        );
+
+        await configurationService.init();
+    });
+
+    loggingService.logDebug('Finished Extension Activation');
+
+    /*
     const phpExecutablePath =
         conf.get<string>('phpExecutablePath') || (await which('php'));
-    let phpExecutableArgs = conf.get<string>('phpExecutableArgs') || [
+    let phpExecutableArgs = conf.get<string[]>('phpExecutableArgs') || [
         '-dxdebug.remote_autostart=0',
         '-dxdebug.remote_enable=0',
         '-dxdebug_profiler_enable=0',
@@ -387,10 +327,7 @@ export async function activate(
     }
 
     const serverOptionsCallbackForDirectory =
-        (
-            dirToAnalyze: string,
-            statusBar: vscode.StatusBarItem
-        ): ServerOptions =>
+        (dirToAnalyze: string, statusBar: StatusBar): ServerOptions =>
         () =>
             new Promise<ChildProcess | StreamInfo>((resolve, reject) => {
                 // Listen on random port
@@ -468,14 +405,9 @@ export async function activate(
                     }
 
                     childProcess.on('exit', (code, signal) => {
-                        statusBar.text =
-                            '$(error) Psalm: Exited (Should Restart)';
-                        statusBar.show();
-                        console.log(
-                            'Psalm Language Server exited: ' +
-                                code +
-                                ':' +
-                                signal
+                        statusBar.update(
+                            LanguageServerStatus.Exited,
+                            'Exited (Should Restart)'
                         );
                     });
                     return childProcess;
@@ -521,21 +453,14 @@ export async function activate(
             configurationSection: 'psalm',
             fileEvents: [
                 vscode.workspace.createFileSystemWatcher(
-                    '**/' + psalmConfigPath
                 ),
                 // this is for when files get changed outside of vscode
-                vscode.workspace.createFileSystemWatcher('**/*.php'),
             ],
         },
         progressOnInitialization: true,
     };
 
-    // this has a low priority so it will end up being more towards the right.
-    const psalmStatusBar: vscode.StatusBarItem =
-        vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1);
-    psalmStatusBar.text = ' $(loading~spin) Psalm: starting';
-    psalmStatusBar.tooltip = 'Psalm Language Server';
-    psalmStatusBar.show();
+    const psalmStatusBar = new StatusBar();
 
     // Create the language client and start the client.
     const lc = new LanguageClient(
@@ -562,31 +487,45 @@ export async function activate(
                 status = params.message.split(':')[0];
             }
 
-            let statusIcon = '';
-
             switch (status) {
                 case 'initializing':
-                    statusIcon = '$(sync~spin)';
+                    psalmStatusBar.update(
+                        LanguageServerStatus.Initializing,
+                        params.message
+                    );
                     break;
                 case 'initialized':
-                    statusIcon = '$(zap)';
+                    psalmStatusBar.update(
+                        LanguageServerStatus.Initialized,
+                        params.message
+                    );
                     break;
                 case 'running':
-                    statusIcon = '$(check)';
+                    psalmStatusBar.update(
+                        LanguageServerStatus.Running,
+                        params.message
+                    );
                     break;
                 case 'analyzing':
-                    statusIcon = '$(sync~spin)';
+                    psalmStatusBar.update(
+                        LanguageServerStatus.Analyzing,
+                        params.message
+                    );
                     break;
                 case 'closing':
-                    statusIcon = '$(issues)';
+                    psalmStatusBar.update(
+                        LanguageServerStatus.Closing,
+                        params.message
+                    );
                     break;
                 case 'closed':
-                    statusIcon = '$(error)';
+                    psalmStatusBar.update(
+                        LanguageServerStatus.Closed,
+                        params.message
+                    );
                     break;
             }
 
-            psalmStatusBar.text =
-                `${statusIcon} Psalm: ${params.message}`.trim();
             if (hideStatusMessageWhenRunning && status === 'running') {
                 psalmStatusBar.hide();
             } else {
@@ -605,10 +544,11 @@ export async function activate(
 
     await lc.onReady();
 
-    psalmStatusBar.text = '$(check) Psalm: running';
+    psalmStatusBar.update(LanguageServerStatus.Running, 'Running');
     if (hideStatusMessageWhenRunning) {
         psalmStatusBar.hide();
     } else {
         psalmStatusBar.show();
     }
+    */
 }

@@ -1,69 +1,51 @@
 import * as vscode from 'vscode';
-import { LanguageClient, ExitNotification } from 'vscode-languageclient/node';
+import { ExitNotification } from 'vscode-languageclient/node';
 import * as semver from 'semver';
+import { LanguageServer } from './LanguageServer';
 interface Command {
     id: string;
     execute(): void;
 }
 
-let warned: boolean = false;
+async function restartSever(client: LanguageServer) {
+    const languageServerVersion = await client.getPsalmLanguageServerVersion();
+    if (languageServerVersion === null) {
+        const reload = await vscode.window.showWarningMessage(
+            'This version of Psalm has a bug in that the only way to force the Language Server to re-analyze the workspace is to forcefully crash it. VSCode limitations only allow us to do this 5 times per session',
+            'Ok',
+            'Cancel'
+        );
+        if (reload === 'Ok') {
+            client.getClient().sendNotification(ExitNotification.type);
+        }
+    } else if (semver.gt('4.8.1', languageServerVersion)) {
+        await client.stop();
+        client.start();
+    }
+}
 
-function analyzeWorkSpace(
-    client: LanguageClient,
-    languageServerVersion: string | null
-): Command {
+function analyzeWorkSpace(client: LanguageServer): Command {
     return {
         id: 'psalm.analyzeWorkSpace',
         async execute() {
-            console.log(client.info);
-            if (languageServerVersion === null) {
-                if (!warned) {
-                    await vscode.window.showWarningMessage(
-                        'This version of Psalm has a bug in that the only way to force the Language Server to re-analyze the workspace is to forcefully crash it. VSCode limitations only allow us to do this 5 times per session'
-                    );
-                }
-                warned = true;
-                client.sendNotification(ExitNotification.type);
-            } else if (semver.gt('4.8.1', languageServerVersion)) {
-                await client.stop();
-                client.start();
-            }
-            return;
+            return await restartSever(client);
         },
     };
 }
 
-function restartPsalmServer(
-    client: LanguageClient,
-    languageServerVersion: string | null
-): Command {
+function restartPsalmServer(client: LanguageServer): Command {
     return {
         id: 'psalm.restartPsalmServer',
         async execute() {
-            if (languageServerVersion === null) {
-                if (!warned) {
-                    await vscode.window.showWarningMessage(
-                        'This version of Psalm has a bug in that the only way to restart the Language Server is to forcefully crash it. VSCode limitations only allow us to do this 5 times per session'
-                    );
-                }
-                warned = true;
-                client.sendNotification(ExitNotification.type);
-            } else if (semver.gt('4.8.1', languageServerVersion)) {
-                await client.stop();
-                client.start();
-            }
-            return;
+            return await restartSever(client);
         },
     };
 }
 
-export function registerCommands(
-    client: LanguageClient,
-    languageServerVersion: string | null
-): vscode.Disposable[] {
+export function registerCommands(client: LanguageServer): vscode.Disposable[] {
     const commands: Command[] = [
-        restartPsalmServer(client, languageServerVersion),
-        analyzeWorkSpace(client, languageServerVersion),
+        restartPsalmServer(client),
+        analyzeWorkSpace(client),
     ];
 
     const disposables = commands.map((command) => {

@@ -8,7 +8,7 @@
 		{"name": "Anthony Rainer"}
 	],
 	"license": "MIT",
-	"version": "2.0.1",
+	"version": "2.0.2",
 	"publisher": "Clearlyip",
 	"categories": [
 		"Linters",
@@ -28,8 +28,8 @@
 	},
 	"activationEvents": [
 		"onLanguage:php",
-		"workspaceContains:**/psalm.xml",
-		"workspaceContains:**/psalm.xml.dist"
+		"workspaceContains:**/*.php",
+		"workspaceContains:**/psalm.@(xml|xml.dist)"
 	],
 	"main": "./dist/extension",
 	"scripts": {
@@ -38,8 +38,9 @@
 		"prepare": "husky install",
 		"vscode:prepublish": "webpack --mode production",
 		"webpack": "webpack --mode development",
-		"webpack-dev": "webpack --mode development --watch",
+		"webpack-dev": "webpack --mode development --watch --progress",
 		"test-compile": "tsc -p ./"
+
 	},
 	"contributes": {
 		"configuration": {
@@ -49,7 +50,7 @@
 				"psalm.phpExecutablePath": {
 					"type": "string",
 					"default": null,
-					"description": "Optional, defaults to searching for \"php\". The path to a PHP 7.0+ executable to use to execute the Psalm server. The PHP 7.0+ installation should preferably include and enable the PHP module `pcntl`. (Modifying requires restart)"
+					"description": "Optional, defaults to searching for \"php\". The path to a PHP 7.0+ executable to use to execute the Psalm server. The PHP 7.0+ installation should preferably include and enable the PHP module `pcntl`. (Modifying requires VSCode reload)"
 				},
 				"psalm.phpExecutableArgs": {
 					"type": "array",
@@ -61,22 +62,22 @@
 						"-dxdebug.remote_enable=0",
 						"-dxdebug_profiler_enable=0"
 					],
-					"description": "Optional (Advanced), default is '-dxdebug.remote_autostart=0 -dxdebug.remote_enable=0 -dxdebug_profiler_enable=0'.  Additional PHP executable CLI arguments to use."
+					"description": "Optional (Advanced), default is '-dxdebug.remote_autostart=0 -dxdebug.remote_enable=0 -dxdebug_profiler_enable=0'.  Additional PHP executable CLI arguments to use. (Modifying requires VSCode reload)"
 				},
 				"psalm.psalmScriptPath": {
 					"type": "string",
 					"default": null,
-					"description": "Optional (Advanced). If provided, this overrides the Psalm script to use, e.g. vendor/bin/psalm-language-server. (Modifying requires restart)"
+					"description": "Optional (Advanced). If provided, this overrides the Psalm script to use, e.g. vendor/bin/psalm-language-server. (Modifying requires VSCode reload)"
 				},
 				"psalm.psalmClientScriptPath": {
 					"type": "string",
 					"default": null,
-					"description": "Optional (Advanced). If provided, this overrides the Psalm script to use, e.g. vendor/bin/psalm. (Modifying requires restart)"
+					"description": "Optional (Advanced). If provided, this overrides the Psalm script to use, e.g. vendor/bin/psalm. (Modifying requires VSCode reload)"
 				},
 				"psalm.enableDebugLog": {
 					"type": "boolean",
 					"default": false,
-					"description": "Enable this to print messages to the debug console when developing or debugging this VS Code extension. (Modifying requires restart)"
+					"description": "Enable this to print messages to the debug console when developing or debugging this VS Code extension. (Modifying requires VSCode reload)"
 				},
 				"psalm.analyzedFileExtensions": {
 					"type": "array",
@@ -90,7 +91,7 @@
 							"language": "php"
 						}
 					],
-					"description": "A list of file extensions to request Psalm to analyze. By default, this only includes 'php' (Modifying requires restart)"
+					"description": "A list of file extensions to request Psalm to analyze. By default, this only includes 'php' (Modifying requires VSCode reload)"
 				},
 				"psalm.unusedVariableDetection": {
 					"type": "boolean",
@@ -100,7 +101,7 @@
 				"psalm.connectToServerWithTcp": {
 					"type": "boolean",
 					"default": false,
-					"description": "If this is set to true, this VSCode extension will use TCP instead of the default STDIO to communicate with the Psalm language server. (Modifying requires restart)"
+					"description": "If this is set to true, this VSCode extension will use TCP instead of the default STDIO to communicate with the Psalm language server. (Modifying requires VSCode reload)"
 				},
 				"psalm.configPaths": {
 					"type": "array",
