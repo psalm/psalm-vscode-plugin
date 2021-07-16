@@ -1,19 +1,17 @@
 {
-	"version": "0.2.0",
-	// List of configurations. Add new configurations or edit existing ones.
-	"configurations": [
-		{
-			"name": "Launch Extension",
-			"type": "extensionHost",
-			"request": "launch",
-			"preLaunchTask": "build",
-			"runtimeExecutable": "${execPath}",
-			"args": [
-			  	"--extensionDevelopmentPath=${workspaceRoot}"
-			],
-			"stopOnEntry": false,
-			"sourceMaps": true,
-			"outFiles": ["${workspaceRoot}/out"]
-		  },
-	]
+    "version": "0.2.0",
+    // List of configurations. Add new configurations or edit existing ones.
+    "configurations": [
+        {
+            "name": "Launch Extension",
+            "type": "extensionHost",
+            "request": "launch",
+            "preLaunchTask": "${defaultBuildTask}",
+            "runtimeExecutable": "${execPath}",
+            "args": ["--extensionDevelopmentPath=${workspaceRoot}"],
+            "stopOnEntry": false,
+            "sourceMaps": true,
+            "outFiles": ["${workspaceRoot}/out"]
+        }
+    ]
 }
