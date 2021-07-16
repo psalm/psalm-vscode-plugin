@@ -4,8 +4,12 @@
 	"description": "VS Code Plugin for Psalm",
 	"author": "Matthew Brown",
 	"contributors": [
-		{"name": "Andrew Nagy"},
-		{"name": "Anthony Rainer"}
+		{
+			"name": "Andrew Nagy"
+		},
+		{
+			"name": "Anthony Rainer"
+		}
 	],
 	"license": "MIT",
 	"version": "2.0.2",
@@ -41,7 +45,6 @@
 		"webpack": "webpack --mode development",
 		"webpack-dev": "webpack --mode development --watch --progress",
 		"test-compile": "tsc -p ./"
-
 	},
 	"contributes": {
 		"configuration": {

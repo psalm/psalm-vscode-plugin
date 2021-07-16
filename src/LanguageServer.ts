@@ -12,7 +12,8 @@ import * as semver from 'semver';
 import { LoggingService } from './LoggingService';
 import { Writable } from 'stream';
 import { createServer } from 'net';
-
+import { showOpenSettingsPrompt } from './utils';
+import which from 'which';
 export class LanguageServer {
     private languageClient: LanguageClient;
     private workspacePath: string;
@@ -243,6 +244,14 @@ export class LanguageServer {
     }
 
     public async start() {
+        // Check if psalm is installed and supports the language server protocol.
+        const isValidPsalmVersion: boolean =
+            await this.checkPsalmHasLanguageServer();
+        if (!isValidPsalmVersion) {
+            showOpenSettingsPrompt('Psalm is not installed');
+            return;
+        }
+
         this.initalizing = true;
         this.statusBar.update(LanguageServerStatus.Initializing, 'starting');
         this.loggingService.logInfo('Starting language server');
@@ -280,7 +289,7 @@ export class LanguageServer {
                         );
                     });
                     socket.on('data', (chunk: Buffer) => {
-                        this.loggingService.logDebug('SERVER ==> ' + chunk);
+                        this.loggingService.logDebug(`SERVER ==> ${chunk}\n`);
                     });
 
                     const writeable = new Writable();
@@ -289,7 +298,7 @@ export class LanguageServer {
                     writeable.write = (chunk, encoding, callback) => {
                         this.loggingService.logDebug(
                             chunk.toString
-                                ? `SERVER <== ${chunk.toString()}`
+                                ? `SERVER <== ${chunk.toString()}\n`
                                 : chunk
                         );
                         return socket.write(chunk, encoding, callback);
@@ -320,15 +329,6 @@ export class LanguageServer {
      * @return Promise<ChildProcess> A promise that resolves to the spawned process
      */
     private async spawnServer(args: string[] = []): Promise<ChildProcess> {
-        // Check if psalm is installed and supports the language server protocol.
-        const isValidPsalmVersion: boolean =
-            await this.checkPsalmHasLanguageServer();
-        if (!isValidPsalmVersion) {
-            throw new Error(
-                'Psalm is not installed or does not support the language server protocol.'
-            );
-        }
-
         const languageServerVersion: string | null =
             await this.getPsalmLanguageServerVersion();
 
@@ -408,7 +408,7 @@ export class LanguageServer {
 
         this.loggingService.logInfo('Starting Psalm Language Server');
 
-        const { file, args: fileArgs } = this.getPhpArgs(args);
+        const { file, args: fileArgs } = await this.getPhpArgs(args);
 
         const childProcess = spawn(file, fileArgs, {
             cwd: this.workspacePath,
@@ -424,13 +424,13 @@ export class LanguageServer {
             // @ts-ignore
             childProcess.stdin.write = (chunk, encoding, callback) => {
                 this.loggingService.logDebug(
-                    chunk.toString ? `SERVER <== ${chunk.toString()}` : chunk
+                    chunk.toString ? `SERVER <== ${chunk.toString()}\n` : chunk
                 );
                 return orig.write(chunk, encoding, callback);
             };
 
             childProcess.stdout.on('data', (chunk: Buffer) => {
-                this.loggingService.logDebug('SERVER ==> ' + chunk);
+                this.loggingService.logDebug(`SERVER ==> ${chunk}\n`);
             });
         }
 
@@ -530,7 +530,7 @@ export class LanguageServer {
     private async executePhp(args: string[]): Promise<string> {
         let stdout: string | Buffer | null | undefined;
 
-        const { file, args: fileArgs } = this.getPhpArgs(args);
+        const { file, args: fileArgs } = await this.getPhpArgs(args);
 
         ({ stdout } = await execFile(file, fileArgs));
 
@@ -542,9 +542,13 @@ export class LanguageServer {
      *
      * @param args The arguments to pass to PHP
      */
-    private getPhpArgs(args: string[]): { file: string; args: string[] } {
+    private async getPhpArgs(
+        args: string[]
+    ): Promise<{ file: string; args: string[] }> {
         const phpExecutablePath =
             this.configurationService.get<string>('phpExecutablePath');
+
+        await which('php');
 
         if (!phpExecutablePath) {
             throw new Error('phpExecutablePath is not set');
@@ -575,8 +579,11 @@ export class LanguageServer {
             this.configurationService.get<string>('psalmScriptPath') || ''
         );
 
-        if (!psalmScriptPath) {
-            throw new Error('psalmScriptPath is not set');
+        if (!psalmScriptPath.length) {
+            this.loggingService.logError(
+                `The setting psalm.psalmScriptPath is not set`
+            );
+            return false;
         }
 
         const exists: boolean = this.isFile(psalmScriptPath);
@@ -587,6 +594,17 @@ export class LanguageServer {
             );
             return false;
         }
+
+        /*
+        try {
+            await access('/etc/passwd', constants.X_OK);
+        } catch {
+            this.loggingService.logError(
+                `The setting psalm.psalmScriptPath refers to a path that is not executable. path: ${psalmScriptPath}`
+            );
+            return false;
+        }
+        */
 
         return true;
     }
