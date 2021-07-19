@@ -149,7 +149,7 @@
 		"@types/node": "^8.10.59",
 		"@types/semver": "^6.2.1",
 		"@types/vscode": "^1.44.0",
-		"husky": "^3.1.0",
+		"husky": "^7.0.1",
 		"tslint": "^5.20.1",
 		"typescript": "^3.7.4",
 		"vsce": "^1.71.0",
