@@ -1,20 +1,44 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-		  "label": "build",
-		  "type": "npm",
-		  "script": "build",
-		  "problemMatcher": [
-				"$tsc"
-		  ]
-		},
-		{
-		  "type": "npm",
-		  "script": "watch",
-		  "problemMatcher": [
-				"$tsc-watch"
-		  ]
-		}
-	  ]
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "npm",
+            "script": "webpack",
+            "problemMatcher": ["$tsc"]
+        },
+        {
+            "type": "npm",
+            "script": "webpack-dev",
+            "problemMatcher": {
+                "owner": "webpack",
+                "severity": "error",
+                "fileLocation": "absolute",
+                "pattern": [
+                    {
+                        "regexp": "ERROR in (.+)((d+),(d+))",
+                        "file": 1,
+                        "line": 2,
+                        "column": 3
+                    },
+                    {
+                        "regexp": ".*",
+                        "message": 0
+                    }
+                ],
+                "background": {
+                    "beginsPattern": "asset",
+                    "endsPattern": "compiled successfully"
+                }
+            },
+            "isBackground": true,
+            "presentation": {
+                "reveal": "never"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
 }

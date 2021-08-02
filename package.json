@@ -3,9 +3,17 @@
 	"displayName": "Psalm (PHP Static Analysis Linting Machine)",
 	"description": "VS Code Plugin for Psalm",
 	"author": "Matthew Brown",
+	"contributors": [
+		{
+			"name": "Andrew Nagy"
+		},
+		{
+			"name": "Anthony Rainer"
+		}
+	],
 	"license": "MIT",
-	"version": "1.2.2",
-	"publisher": "getpsalm",
+	"version": "2.0.3",
+	"publisher": "Clearlyip",
 	"categories": [
 		"Linters",
 		"Programming Languages"
@@ -20,72 +28,71 @@
 		"url": "https://github.com/psalm/psalm-vscode-plugin"
 	},
 	"engines": {
-		"vscode": "^1.44.0"
+		"vscode": "^1.57.0"
 	},
 	"activationEvents": [
 		"onLanguage:php",
-        	"workspaceContains:psalm.xml",
-		"workspaceContains:psalm.xml.dist"
+		"workspaceContains:**/*.php",
+		"workspaceContains:**/psalm.@(xml|xml.dist)"
 	],
-	"main": "./out/extension",
+	"main": "./dist/extension",
 	"scripts": {
-		"build": "tsc -p .",
-		"watch": "tsc -w -p .",
 		"lint": "tslint -c tslint.json \"src/**/*.ts\"",
-		"semantic-release": "semantic-release"
+		"semantic-release": "semantic-release",
+		"prepare": "husky install",
+		"build": "webpack --mode production",
+		"vscode:prepublish": "webpack --mode production",
+		"webpack": "webpack --mode development",
+		"webpack-dev": "webpack --mode development --watch --progress",
+		"test-compile": "tsc -p ./",
+		"package": "vsce package",
+		"publish": "vsce publish"
 	},
+	"extensionKind": ["workspace"],
 	"contributes": {
 		"configuration": {
 			"type": "object",
 			"title": "PHP - Psalm Analyzer",
 			"properties": {
 				"psalm.phpExecutablePath": {
-					"type": [
-						"string",
-						"null"
-					],
+					"type": "string",
 					"default": null,
-					"description": "Optional, defaults to searching for \"php\". The path to a PHP 7.0+ executable to use to execute the Psalm server. The PHP 7.0+ installation should preferably include and enable the PHP module `pcntl`. (Modifying requires restart)"
+					"description": "Optional, defaults to searching for \"php\". The path to a PHP 7.0+ executable to use to execute the Psalm server. The PHP 7.0+ installation should preferably include and enable the PHP module `pcntl`. (Modifying requires VSCode reload)"
 				},
 				"psalm.phpExecutableArgs": {
-					"type": [
-						"array",
-						"null"
-					],
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
 					"default": [
 						"-dxdebug.remote_autostart=0",
 						"-dxdebug.remote_enable=0",
 						"-dxdebug_profiler_enable=0"
 					],
-					"description": "Optional (Advanced), default is '-dxdebug.remote_autostart=0 -dxdebug.remote_enable=0 -dxdebug_profiler_enable=0'.  Additional PHP executable CLI arguments to use."
+					"description": "Optional (Advanced), default is '-dxdebug.remote_autostart=0 -dxdebug.remote_enable=0 -dxdebug_profiler_enable=0'.  Additional PHP executable CLI arguments to use. (Modifying requires VSCode reload)"
 				},
 				"psalm.psalmScriptPath": {
-					"type": [
-						"string",
-						"null"
-					],
+					"type": "string",
 					"default": null,
-					"description": "Optional (Advanced). If provided, this overrides the Psalm script to use, e.g. vendor/bin/psalm-language-server. (Modifying requires restart)"
+					"description": "Optional (Advanced). If provided, this overrides the Psalm script to use, e.g. vendor/bin/psalm-language-server. (Modifying requires VSCode reload)"
 				},
 				"psalm.psalmClientScriptPath": {
-					"type": [
-						"string",
-						"null"
-					],
+					"type": "string",
 					"default": null,
-					"description": "Optional (Advanced). If provided, this overrides the Psalm script to use, e.g. vendor/bin/psalm. (Modifying requires restart)"
+					"description": "Optional (Advanced). If provided, this overrides the Psalm script to use, e.g. vendor/bin/psalm. (Modifying requires VSCode reload)"
+				},
+				"psalm.enableIniDefaults": {
+					"type": "boolean",
+					"default": false,
+					"description": "Enable this to use PHP-provided ini defaults for memory and error display. (Modifying requires restart)"
 				},
 				"psalm.enableDebugLog": {
-					"type": [
-						"boolean"
-					],
+					"type": "boolean",
 					"default": false,
-					"description": "Enable this to print messages to the debug console when developing or debugging this VS Code extension. (Modifying requires restart)"
+					"description": "Enable this to print messages to the debug console when developing or debugging this VS Code extension. (Modifying requires VSCode reload)"
 				},
 				"psalm.analyzedFileExtensions": {
-					"type": [
-						"array"
-					],
+					"type": "array",
 					"default": [
 						{
 							"scheme": "file",
@@ -96,25 +103,23 @@
 							"language": "php"
 						}
 					],
-					"description": "A list of file extensions to request Psalm to analyze. By default, this only includes 'php' (Modifying requires restart)"
+					"description": "A list of file extensions to request Psalm to analyze. By default, this only includes 'php' (Modifying requires VSCode reload)"
 				},
 				"psalm.unusedVariableDetection": {
-					"type": [
-						"boolean"
-					],
+					"type": "boolean",
 					"default": false,
 					"description": "Enable this to enable unused variable and parameter detection"
 				},
 				"psalm.connectToServerWithTcp": {
-					"type": [
-						"boolean",
-						"null"
-					],
+					"type": "boolean",
 					"default": false,
-					"description": "If this is set to true, this VSCode extension will use TCP instead of the default STDIO to communicate with the Psalm language server. (Modifying requires restart)"
+					"description": "If this is set to true, this VSCode extension will use TCP instead of the default STDIO to communicate with the Psalm language server. (Modifying requires VSCode reload)"
 				},
 				"psalm.configPaths": {
 					"type": "array",
+					"items": {
+						"type": "string"
+					},
 					"default": [
 						"psalm.xml",
 						"psalm.xml.dist"
@@ -123,7 +128,7 @@
 				},
 				"psalm.hideStatusMessageWhenRunning": {
 					"type": "boolean",
-					"default": false,
+					"default": true,
 					"description": "This will hide the Psalm status from the status bar when it is started and running.  This is useful to clear up a cluttered status bar."
 				}
 			}
@@ -132,33 +137,44 @@
 			{
 				"command": "psalm.restartPsalmServer",
 				"title": "Restart Psalm Language server",
-				"category": "psalm"
+				"category": "Psalm"
+			},
+			{
+				"command": "psalm.analyzeWorkSpace",
+				"title": "Analyze Workspace",
+				"category": "Psalm"
 			}
 		],
 		"menus": {
 			"commandPalette": [
 				{
 					"command": "psalm.restartPsalmServer"
+				},
+				{
+					"command": "psalm.analyzeWorkSpace"
 				}
 			]
 		}
 	},
 	"devDependencies": {
-		"@types/mocha": "^2.2.48",
-		"@types/mz": "0.0.31",
-		"@types/node": "^8.10.59",
-		"@types/semver": "^6.2.1",
-		"@types/vscode": "^1.44.0",
-		"husky": "^3.1.0",
-		"tslint": "^5.20.1",
-		"typescript": "^3.7.4",
-		"vsce": "^1.71.0",
-		"vscode-test": "^1.3.0"
+		"@types/node": "^14.16.0",
+		"@types/semver": "^7.3.6",
+		"@types/vscode": "^1.57.0",
+		"@types/which": "^2.0.0",
+		"husky": "^6.0.0",
+		"prettier": "^2.3.1",
+		"ts-loader": "^9.2.3",
+		"tslint": "^6.1.3",
+		"typescript": "^4.3.4",
+		"vsce": "^1.95.0",
+		"webpack": "^5.41.1",
+		"webpack-cli": "^4.7.2"
 	},
 	"dependencies": {
 		"mz": "^2.7.0",
-		"semantic-release": "^17.2.3",
-		"semver": "^6.3.0",
-		"vscode-languageclient": "^7.0.0-next.1"
+		"promisify-child-process": "^4.1.1",
+		"semver": "^7.3.5",
+		"vscode-languageclient": "^7.0.0-next.5",
+		"which": "^2.0.2"
 	}
 }
