@@ -42,7 +42,11 @@ export class ConfigurationService {
             workspaceConfiguration.get<boolean>('enableDebugLog') || false;
 
         this.config.connectToServerWithTcp =
-            workspaceConfiguration.get<boolean>('connectToServerWithTcp');
+            workspaceConfiguration.get<boolean>('connectToServerWithTcp') ||
+            false;
+
+        this.config.useIniDefaults =
+            workspaceConfiguration.get<boolean>('useIniDefaults') || false;
 
         this.config.analyzedFileExtensions = workspaceConfiguration.get<
             string[] | DocumentSelector
@@ -78,7 +82,10 @@ export class ConfigurationService {
         return true;
     }
 
-    public get<T>(key: string): T | undefined {
+    public get<T>(key: string): T {
+        if (!(key in this.config)) {
+            throw new Error(`Key ${key} not found in configuration`);
+        }
         return this.config[key];
     }
 }

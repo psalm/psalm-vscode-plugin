@@ -12,7 +12,7 @@
 		}
 	],
 	"license": "MIT",
-	"version": "2.0.2",
+	"version": "2.0.3",
 	"publisher": "Clearlyip",
 	"categories": [
 		"Linters",
@@ -44,8 +44,11 @@
 		"vscode:prepublish": "webpack --mode production",
 		"webpack": "webpack --mode development",
 		"webpack-dev": "webpack --mode development --watch --progress",
-		"test-compile": "tsc -p ./"
+		"test-compile": "tsc -p ./",
+		"package": "vsce package",
+		"publish": "vsce publish"
 	},
+	"extensionKind": ["workspace"],
 	"contributes": {
 		"configuration": {
 			"type": "object",
@@ -77,6 +80,11 @@
 					"type": "string",
 					"default": null,
 					"description": "Optional (Advanced). If provided, this overrides the Psalm script to use, e.g. vendor/bin/psalm. (Modifying requires VSCode reload)"
+				},
+				"psalm.enableIniDefaults": {
+					"type": "boolean",
+					"default": false,
+					"description": "Enable this to use PHP-provided ini defaults for memory and error display. (Modifying requires restart)"
 				},
 				"psalm.enableDebugLog": {
 					"type": "boolean",

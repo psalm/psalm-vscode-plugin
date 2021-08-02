@@ -14,7 +14,6 @@ import { LoggingService } from './LoggingService';
 import { Writable } from 'stream';
 import { createServer } from 'net';
 import { showOpenSettingsPrompt, showErrorMessage } from './utils';
-import which from 'which';
 export class LanguageServer {
     private languageClient: LanguageClient;
     private workspacePath: string;
@@ -28,6 +27,71 @@ export class LanguageServer {
     private disposable: Disposable;
     private serverProcess: ChildProcess | null = null;
     private context: ExtensionContext;
+
+    public static async getInstance(
+        context: ExtensionContext,
+        workspacePath: string,
+        statusBar: StatusBar,
+        configurationService: ConfigurationService,
+        loggingService: LoggingService
+    ): Promise<LanguageServer | null> {
+        await configurationService.init();
+
+        const configPaths = configurationService.get<string[]>('configPaths');
+
+        if (!configPaths.length) {
+            loggingService.logError(
+                `No Config Paths defined. Define some and try again`
+            );
+            return null;
+        }
+
+        const psalmXML = await workspace.findFiles(
+            `{${configPaths.join(',')}}`
+            // `**/vendor/**/{${configPaths.join(',')}}`
+        );
+        if (!psalmXML.length) {
+            // no psalm.xml found
+            loggingService.logError(
+                `No Config file found in: ${configPaths.join(',')}`
+            );
+            return null;
+        }
+        const configXml = psalmXML[0].path;
+
+        loggingService.logDebug(`Found config file: ${configXml}`);
+
+        const configWatcher = workspace.createFileSystemWatcher(configXml);
+
+        const languageServer = new LanguageServer(
+            context,
+            workspacePath,
+            configXml,
+            statusBar,
+            configurationService,
+            loggingService
+        );
+
+        const onConfigChange = () => {
+            loggingService.logInfo(`Config file changed: ${configXml}`);
+            languageServer.restart();
+        };
+
+        const onConfigDelete = () => {
+            loggingService.logInfo(`Config file deleted: ${configXml}`);
+            languageServer.stop();
+        };
+
+        // Restart the language server when the tracked config file changes
+        configWatcher.onDidChange(onConfigChange);
+        configWatcher.onDidCreate(onConfigChange);
+        configWatcher.onDidDelete(onConfigDelete);
+
+        // Start Lanuage Server
+        await languageServer.start();
+
+        return languageServer;
+    }
 
     constructor(
         context: ExtensionContext,
@@ -92,7 +156,7 @@ export class LanguageServer {
             const hideStatusMessageWhenRunning =
                 this.configurationService.get<boolean>(
                     'hideStatusMessageWhenRunning'
-                ) || false;
+                );
 
             let status: string = params.message;
 
@@ -145,72 +209,6 @@ export class LanguageServer {
                 this.statusBar.show();
             }
         }
-    }
-
-    public static async getInstance(
-        context: ExtensionContext,
-        workspacePath: string,
-        statusBar: StatusBar,
-        configurationService: ConfigurationService,
-        loggingService: LoggingService
-    ): Promise<LanguageServer | null> {
-        await configurationService.init();
-
-        const configPaths =
-            configurationService.get<string[]>('configPaths') || [];
-
-        if (!configPaths.length) {
-            loggingService.logError(
-                `No Config Paths defined. Define some and try again`
-            );
-            return null;
-        }
-
-        const psalmXML = await workspace.findFiles(
-            `{${configPaths.join(',')}}`
-            // `**/vendor/**/{${configPaths.join(',')}}`
-        );
-        if (!psalmXML.length) {
-            // no psalm.xml found
-            loggingService.logError(
-                `No Config file found in: ${configPaths.join(',')}`
-            );
-            return null;
-        }
-        const configXml = psalmXML[0].path;
-
-        loggingService.logDebug(`Found config file: ${configXml}`);
-
-        const configWatcher = workspace.createFileSystemWatcher(configXml);
-
-        const languageServer = new LanguageServer(
-            context,
-            workspacePath,
-            configXml,
-            statusBar,
-            configurationService,
-            loggingService
-        );
-
-        const onConfigChange = () => {
-            loggingService.logInfo(`Config file changed: ${configXml}`);
-            languageServer.restart();
-        };
-
-        const onConfigDelete = () => {
-            loggingService.logInfo(`Config file deleted: ${configXml}`);
-            languageServer.stop();
-        };
-
-        // Restart the language server when the tracked config file changes
-        configWatcher.onDidChange(onConfigChange);
-        configWatcher.onDidCreate(onConfigChange);
-        configWatcher.onDidDelete(onConfigDelete);
-
-        // Start Lanuage Server
-        await languageServer.start();
-
-        return languageServer;
     }
 
     public getServerProcess(): ChildProcess | null {
@@ -333,16 +331,16 @@ export class LanguageServer {
         const languageServerVersion: string | null =
             await this.getPsalmLanguageServerVersion();
 
-        const unusedVariableDetection =
-            this.configurationService.get<boolean>('unusedVariableDetection') ||
-            false;
+        const unusedVariableDetection = this.configurationService.get<boolean>(
+            'unusedVariableDetection'
+        );
 
         if (unusedVariableDetection) {
             args.unshift('--find-dead-code');
         }
 
         const enableDebugLog =
-            this.configurationService.get<boolean>('enableDebugLog') || false;
+            this.configurationService.get<boolean>('enableDebugLog');
 
         if (enableDebugLog) {
             args.unshift('--verbose');
@@ -390,6 +388,13 @@ export class LanguageServer {
             if (enableDebugLog) {
                 psalmScriptArgs.unshift('--verbose');
             }
+
+            const useIniDefaults =
+                this.configurationService.get<boolean>('useIniDefaults');
+
+            if (useIniDefaults) {
+                psalmScriptArgs.unshift('--use-ini-defaults');
+            }
         }
 
         args.unshift('-r', this.workspacePath);
@@ -404,7 +409,7 @@ export class LanguageServer {
         // The server is implemented in PHP
         // this goes before the cli argument separator
         const psalmScriptPath =
-            this.configurationService.get<string>('psalmScriptPath') || 'psalm';
+            this.configurationService.get<string>('psalmScriptPath');
         args.unshift('-f', join(this.workspacePath, psalmScriptPath));
 
         this.loggingService.logInfo('Starting Psalm Language Server');
@@ -488,7 +493,7 @@ export class LanguageServer {
      */
     public async getPsalmLanguageServerVersion(): Promise<string | null> {
         const psalmScriptPath =
-            this.configurationService.get<string>('psalmScriptPath') || '';
+            this.configurationService.get<string>('psalmScriptPath');
 
         if (!psalmScriptPath.length) {
             await showErrorMessage(
@@ -556,8 +561,7 @@ export class LanguageServer {
         args: string[]
     ): Promise<{ file: string; args: string[] }> {
         const phpExecutablePath =
-            this.configurationService.get<string>('phpExecutablePath') ||
-            (await which('php'));
+            this.configurationService.get<string>('phpExecutablePath');
 
         if (!phpExecutablePath.length) {
             const msg =
@@ -596,7 +600,7 @@ export class LanguageServer {
     private async checkPsalmHasLanguageServer(): Promise<boolean> {
         const psalmScriptPath = join(
             this.workspacePath,
-            this.configurationService.get<string>('psalmScriptPath') || ''
+            this.configurationService.get<string>('psalmScriptPath')
         );
 
         if (!psalmScriptPath.length) {
