@@ -11,14 +11,14 @@ async function restartSever(client: LanguageServer) {
     const languageServerVersion = await client.getPsalmLanguageServerVersion();
     if (languageServerVersion === null) {
         const reload = await vscode.window.showWarningMessage(
-            'This version of Psalm has a bug in that the only way to force the Language Server to re-analyze the workspace is to forcefully crash it. VSCode limitations only allow us to do this 5 times per session',
+            'This version of Psalm has a bug in that the only way to force the Language Server to re-analyze the workspace is to forcefully crash it. VSCode limitations only allow us to do this 5 times per session. Consider upgrading to at least 4.9.0 of Psalm',
             'Ok',
             'Cancel'
         );
         if (reload === 'Ok') {
             client.getClient().sendNotification(ExitNotification.type);
         }
-    } else if (semver.gt('4.8.1', languageServerVersion)) {
+    } else if (semver.gte(languageServerVersion, '4.9.0')) {
         await client.stop();
         client.start();
     }

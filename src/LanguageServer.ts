@@ -7,12 +7,13 @@ import { DocumentSelector } from 'vscode-languageserver-protocol';
 import { join } from 'path';
 import { execFile } from 'promisify-child-process';
 import { ConfigurationService } from './ConfigurationService';
-import { statSync } from 'fs';
+import { statSync, constants } from 'fs';
+import { access } from 'fs/promises';
 import * as semver from 'semver';
 import { LoggingService } from './LoggingService';
 import { Writable } from 'stream';
 import { createServer } from 'net';
-import { showOpenSettingsPrompt } from './utils';
+import { showOpenSettingsPrompt, showErrorMessage } from './utils';
 import which from 'which';
 export class LanguageServer {
     private languageClient: LanguageClient;
@@ -361,7 +362,7 @@ export class LanguageServer {
 
         if (
             languageServerVersion === null ||
-            semver.lt('4.8.2', languageServerVersion)
+            semver.lt(languageServerVersion, '4.9.0')
         ) {
             if (
                 await this.checkPsalmLanguageServerHasOption(
@@ -381,7 +382,7 @@ export class LanguageServer {
             ) {
                 psalmScriptArgs.unshift('--verbose');
             }
-        } else if (semver.gt('4.8.1', languageServerVersion)) {
+        } else if (semver.gte(languageServerVersion, '4.9.0')) {
             this.loggingService.logDebug(
                 `Psalm Language Server Version: ${languageServerVersion}`
             );
@@ -486,21 +487,29 @@ export class LanguageServer {
      * @return Promise<string> A promise that resolves to the language server version (Or null)
      */
     public async getPsalmLanguageServerVersion(): Promise<string | null> {
-        const psalmClientScriptPath = this.configurationService.get<string>(
-            'psalmClientScriptPath'
-        );
+        const psalmScriptPath =
+            this.configurationService.get<string>('psalmScriptPath') || '';
 
-        if (!psalmClientScriptPath) {
-            throw new Error('psalmClientScriptPath is not set');
+        if (!psalmScriptPath.length) {
+            await showErrorMessage(
+                `Unable to find Psalm Language Server. Please set psalm.psalmScriptPath`
+            );
+            throw new Error('psalmScriptPath is not set');
         }
 
         try {
-            const args: string[] = [
-                '-f',
-                psalmClientScriptPath,
-                '--',
-                '--version',
-            ];
+            await access(
+                `${this.workspacePath}/${psalmScriptPath}`,
+                constants.F_OK
+            );
+        } catch {
+            const msg = `${psalmScriptPath} does not exist. Please set a valid path to psalm.psalmScriptPath`;
+            await showErrorMessage(`Psalm can not start: ${msg}`);
+            throw new Error(msg);
+        }
+
+        try {
+            const args: string[] = ['-f', psalmScriptPath, '--', '--version'];
             const out = await this.executePhp(args);
             // Psalm 4.8.1@f73f2299dbc59a3e6c4d66cff4605176e728ee69
             const ret = out.match(/^Psalm\s*((?:[0-9]+\.?)+)@([0-9a-f]{40})/);
@@ -532,8 +541,9 @@ export class LanguageServer {
 
         const { file, args: fileArgs } = await this.getPhpArgs(args);
 
-        ({ stdout } = await execFile(file, fileArgs));
-
+        ({ stdout } = await execFile(file, fileArgs, {
+            cwd: this.workspacePath,
+        }));
         return String(stdout);
     }
 
@@ -546,12 +556,22 @@ export class LanguageServer {
         args: string[]
     ): Promise<{ file: string; args: string[] }> {
         const phpExecutablePath =
-            this.configurationService.get<string>('phpExecutablePath');
+            this.configurationService.get<string>('phpExecutablePath') ||
+            (await which('php'));
 
-        await which('php');
+        if (!phpExecutablePath.length) {
+            const msg =
+                'Unable to find any php executable please set one in psalm.phpExecutablePath';
+            await showOpenSettingsPrompt(`Psalm can not start: ${msg}`);
+            throw new Error(msg);
+        }
 
-        if (!phpExecutablePath) {
-            throw new Error('phpExecutablePath is not set');
+        try {
+            await access(phpExecutablePath, constants.X_OK);
+        } catch {
+            const msg = `${phpExecutablePath} is not executable`;
+            await showErrorMessage(`Psalm can not start: ${msg}`);
+            throw new Error(msg);
         }
 
         const phpExecutableArgs =
@@ -594,17 +614,6 @@ export class LanguageServer {
             );
             return false;
         }
-
-        /*
-        try {
-            await access('/etc/passwd', constants.X_OK);
-        } catch {
-            this.loggingService.logError(
-                `The setting psalm.psalmScriptPath refers to a path that is not executable. path: ${psalmScriptPath}`
-            );
-            return false;
-        }
-        */
 
         return true;
     }
