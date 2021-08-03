@@ -81,7 +81,7 @@
 					"default": null,
 					"description": "Optional (Advanced). If provided, this overrides the Psalm script to use, e.g. vendor/bin/psalm. (Modifying requires VSCode reload)"
 				},
-				"psalm.enableIniDefaults": {
+				"psalm.enableUseIniDefaults": {
 					"type": "boolean",
 					"default": false,
 					"description": "Enable this to use PHP-provided ini defaults for memory and error display. (Modifying requires restart)"

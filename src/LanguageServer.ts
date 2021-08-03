@@ -389,10 +389,10 @@ export class LanguageServer {
                 psalmScriptArgs.unshift('--verbose');
             }
 
-            const useIniDefaults =
-                this.configurationService.get<boolean>('useIniDefaults');
+            const enableUseIniDefaults =
+                this.configurationService.get<boolean>('enableUseIniDefaults');
 
-            if (useIniDefaults) {
+            if (enableUseIniDefaults) {
                 psalmScriptArgs.unshift('--use-ini-defaults');
             }
         }
