@@ -45,8 +45,8 @@ export class ConfigurationService {
             workspaceConfiguration.get<boolean>('connectToServerWithTcp') ||
             false;
 
-        this.config.useIniDefaults =
-            workspaceConfiguration.get<boolean>('useIniDefaults') || false;
+        this.config.enableUseIniDefaults =
+            workspaceConfiguration.get<boolean>('enableUseIniDefaults') || false;
 
         this.config.analyzedFileExtensions = workspaceConfiguration.get<
             string[] | DocumentSelector
