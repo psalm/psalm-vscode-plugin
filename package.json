@@ -12,8 +12,8 @@
 		}
 	],
 	"license": "MIT",
-	"version": "2.0.3",
-	"publisher": "Clearlyip",
+	"version": "2.0.4",
+	"publisher": "getpsalm",
 	"categories": [
 		"Linters",
 		"Programming Languages"
