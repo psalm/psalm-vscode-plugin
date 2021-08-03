@@ -28,7 +28,7 @@
 		"url": "https://github.com/psalm/psalm-vscode-plugin"
 	},
 	"engines": {
-		"vscode": "^1.57.0"
+		"vscode": "^1.58.1"
 	},
 	"activationEvents": [
 		"onLanguage:php",
