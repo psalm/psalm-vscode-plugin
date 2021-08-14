@@ -79,7 +79,9 @@
 				"psalm.psalmClientScriptPath": {
 					"type": "string",
 					"default": null,
-					"description": "Optional (Advanced). If provided, this overrides the Psalm script to use, e.g. vendor/bin/psalm. (Modifying requires VSCode reload)"
+					"description": "Optional (Advanced). If provided, this overrides the Psalm script to use, e.g. vendor/bin/psalm. (Modifying requires VSCode reload)",
+					"markdownDeprecationMessage": "**Deprecated**: Please use `#psalm.psalmScriptPath#` instead.",
+					"deprecationMessage": "Deprecated: Please use psalm.psalmScriptPath instead."
 				},
 				"psalm.enableUseIniDefaults": {
 					"type": "boolean",

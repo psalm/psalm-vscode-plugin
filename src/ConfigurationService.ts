@@ -26,10 +26,6 @@ export class ConfigurationService {
             '-dxdebug_profiler_enable=0',
         ];
 
-        this.config.psalmClientScriptPath =
-            workspaceConfiguration.get<string>('psalmClientScriptPath') ||
-            join('vendor', 'vimeo', 'psalm', 'psalm');
-
         this.config.psalmScriptPath =
             workspaceConfiguration.get<string>('psalmScriptPath') ||
             join('vendor', 'vimeo', 'psalm', 'psalm-language-server');
@@ -46,7 +42,8 @@ export class ConfigurationService {
             false;
 
         this.config.enableUseIniDefaults =
-            workspaceConfiguration.get<boolean>('enableUseIniDefaults') || false;
+            workspaceConfiguration.get<boolean>('enableUseIniDefaults') ||
+            false;
 
         this.config.analyzedFileExtensions = workspaceConfiguration.get<
             string[] | DocumentSelector
@@ -70,15 +67,6 @@ export class ConfigurationService {
             );
             return false;
         }
-
-        // Check if the psalmClientScriptPath setting was provided.
-        if (!this.config.psalmClientScriptPath) {
-            await showOpenSettingsPrompt(
-                'The setting psalm.psalmClientScriptPath must be provided (e.g. vendor/bin/psalm)'
-            );
-            return false;
-        }
-
         return true;
     }
 

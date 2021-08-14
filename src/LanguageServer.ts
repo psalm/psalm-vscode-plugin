@@ -4,7 +4,7 @@ import { spawn, ChildProcess } from 'child_process';
 import { workspace, Uri, Disposable, ExtensionContext } from 'vscode';
 import { format, URL } from 'url';
 import { DocumentSelector } from 'vscode-languageserver-protocol';
-import { join } from 'path';
+import { join, isAbsolute } from 'path';
 import { execFile } from 'promisify-child-process';
 import { ConfigurationService } from './ConfigurationService';
 import { statSync, constants } from 'fs';
@@ -389,8 +389,9 @@ export class LanguageServer {
                 psalmScriptArgs.unshift('--verbose');
             }
 
-            const enableUseIniDefaults =
-                this.configurationService.get<boolean>('enableUseIniDefaults');
+            const enableUseIniDefaults = this.configurationService.get<boolean>(
+                'enableUseIniDefaults'
+            );
 
             if (enableUseIniDefaults) {
                 psalmScriptArgs.unshift('--use-ini-defaults');
@@ -408,9 +409,8 @@ export class LanguageServer {
 
         // The server is implemented in PHP
         // this goes before the cli argument separator
-        const psalmScriptPath =
-            this.configurationService.get<string>('psalmScriptPath');
-        args.unshift('-f', join(this.workspacePath, psalmScriptPath));
+        const psalmScriptPath = await this.resolvePsalmScriptPath();
+        args.unshift('-f', psalmScriptPath);
 
         this.loggingService.logInfo('Starting Psalm Language Server');
 
@@ -459,12 +459,7 @@ export class LanguageServer {
         psalmScriptArgs: string[],
         option: string
     ): Promise<boolean> {
-        const psalmScriptPath =
-            this.configurationService.get<string>('psalmScriptPath');
-
-        if (!psalmScriptPath) {
-            throw new Error('psalmScriptPath is not set');
-        }
+        const psalmScriptPath = await this.resolvePsalmScriptPath();
 
         try {
             const args: string[] = [
@@ -492,21 +487,10 @@ export class LanguageServer {
      * @return Promise<string> A promise that resolves to the language server version (Or null)
      */
     public async getPsalmLanguageServerVersion(): Promise<string | null> {
-        const psalmScriptPath =
-            this.configurationService.get<string>('psalmScriptPath');
-
-        if (!psalmScriptPath.length) {
-            await showErrorMessage(
-                `Unable to find Psalm Language Server. Please set psalm.psalmScriptPath`
-            );
-            throw new Error('psalmScriptPath is not set');
-        }
+        const psalmScriptPath = await this.resolvePsalmScriptPath();
 
         try {
-            await access(
-                `${this.workspacePath}/${psalmScriptPath}`,
-                constants.F_OK
-            );
+            await access(psalmScriptPath, constants.F_OK);
         } catch {
             const msg = `${psalmScriptPath} does not exist. Please set a valid path to psalm.psalmScriptPath`;
             await showErrorMessage(`Psalm can not start: ${msg}`);
@@ -598,17 +582,7 @@ export class LanguageServer {
      * @return Promise<boolean> A promise that resolves to true if the language server protocol is supported
      */
     private async checkPsalmHasLanguageServer(): Promise<boolean> {
-        const psalmScriptPath = join(
-            this.workspacePath,
-            this.configurationService.get<string>('psalmScriptPath')
-        );
-
-        if (!psalmScriptPath.length) {
-            this.loggingService.logError(
-                `The setting psalm.psalmScriptPath is not set`
-            );
-            return false;
-        }
+        const psalmScriptPath = await this.resolvePsalmScriptPath();
 
         const exists: boolean = this.isFile(psalmScriptPath);
 
@@ -632,5 +606,25 @@ export class LanguageServer {
         } catch (e) {
             return false;
         }
+    }
+
+    /**
+     * Resolve Pslam Script Path if absolute or relative
+     */
+    private async resolvePsalmScriptPath(): Promise<string> {
+        const psalmScriptPath =
+            this.configurationService.get<string>('psalmScriptPath');
+
+        if (!psalmScriptPath) {
+            await showErrorMessage(
+                `Unable to find Psalm Language Server. Please set psalm.psalmScriptPath`
+            );
+            throw new Error('psalmScriptPath is not set');
+        }
+
+        if (isAbsolute(psalmScriptPath)) {
+            return psalmScriptPath;
+        }
+        return join(this.workspacePath, psalmScriptPath);
     }
 }
