@@ -93,6 +93,44 @@
 					"default": false,
 					"description": "Enable this to print messages to the debug console when developing or debugging this VS Code extension. (Modifying requires VSCode reload)"
 				},
+				"psalm.trace.server": {
+					"scope": "window",
+					"anyOf": [
+						{
+							"type": "string",
+							"enum": [
+								"off",
+								"messages",
+								"verbose"
+							],
+							"default": "off"
+						},
+						{
+							"type": "object",
+							"properties": {
+								"verbosity": {
+									"type": "string",
+									"enum": [
+										"off",
+										"messages",
+										"verbose"
+									],
+									"default": "off"
+								},
+								"format": {
+									"type": "string",
+									"enum": [
+										"text",
+										"json"
+									],
+									"default": "text"
+								}
+							}
+						}
+					],
+					"default": "off",
+					"description": "Traces the communication between VSCode and the Psalm language server."
+				},
 				"psalm.analyzedFileExtensions": {
 					"type": "array",
 					"default": [
