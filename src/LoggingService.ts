@@ -1,4 +1,4 @@
-import { window } from 'vscode';
+import { window, OutputChannel } from 'vscode';
 
 type LogLevel = 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'NONE';
 
@@ -9,6 +9,10 @@ export class LoggingService {
 
     public setOutputLevel(logLevel: LogLevel) {
         this.logLevel = logLevel;
+    }
+
+    public getOutputChannel(): OutputChannel {
+        return this.outputChannel;
     }
 
     /**
@@ -91,14 +95,7 @@ export class LoggingService {
     }
 
     private logObject(data: unknown): void {
-        /*
-    const message = prettier
-      .format(JSON.stringify(data, null, 2), {
-        parser: "json",
-      })
-      .trim();
-    this.outputChannel.appendLine(message);
-	*/
+        this.outputChannel.appendLine(JSON.stringify(data, null, 2));
     }
 
     /**
@@ -108,6 +105,6 @@ export class LoggingService {
      */
     private logMessage(message: string, logLevel: LogLevel): void {
         const title = new Date().toLocaleTimeString();
-        this.outputChannel.appendLine(`["${logLevel}" - ${title}] ${message}`);
+        this.outputChannel.appendLine(`[${logLevel} - ${title}] ${message}`);
     }
 }

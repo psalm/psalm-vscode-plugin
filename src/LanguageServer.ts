@@ -109,10 +109,12 @@ export class LanguageServer {
         this.loggingService = loggingService;
 
         this.languageClient = new LanguageClient(
-            'psalmLanguageServer',
+            'psalm',
             'Psalm Language Server',
             this.serverOptions.bind(this),
             {
+                outputChannel: this.loggingService.getOutputChannel(),
+                traceOutputChannel: this.loggingService.getOutputChannel(),
                 // Register the server for php (and maybe HTML) documents
                 documentSelector: this.configurationService.get<
                     string[] | DocumentSelector
