@@ -1,3 +1,8 @@
+# 2.2.0 - 2021-08-19
+
+-   Add better tracing/debug/logging
+-   Deprecates `enableDebugLog` in favor of split settings `trace.server`, `logLevel` and `enableVerbose`. See settings for more information
+
 # 2.1.0 - 2021-08-14
 
 -   Fixes "Support for absolute paths for Psalm Client Script Path and Psalm Script Path" (#71) [@ thomasbley]
