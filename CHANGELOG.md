@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.2] - 2021-08-20
+
+### Added
+
+-   Adjust how changelog is created to that releases can be automatically created
+
 ## [2.2.1] - 2021-08-20
 
 ### Added
