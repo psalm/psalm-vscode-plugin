@@ -1,0 +1,22 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  tagged-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - run: npm ci
+      - run: npm run package
+      - run: echo ::set-output name=SOURCE_TAG::${GITHUB_REF#refs/tags/}
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: psalm-vscode-plugin-${{ steps.branch_name.outputs.SOURCE_TAG }}.vsix
