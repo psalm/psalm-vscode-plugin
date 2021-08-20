@@ -2,6 +2,7 @@
 
 -   Add better tracing/debug/logging
 -   Deprecates `enableDebugLog` in favor of split settings `trace.server`, `logLevel` and `enableVerbose`. See settings for more information
+-   Consolidates OUTPUT log window into one view instead of two
 
 # 2.1.0 - 2021-08-14
 
