@@ -17,6 +17,8 @@ jobs:
           node-version: '14'
       - run: npm ci
       - run: npm run package
+      - uses: battila7/get-version-action@v2
       - uses: softprops/action-gh-release@v1
         with:
-          files: psalm-vscode-plugin-${{ steps.get_version.outputs.version }}.vsix
+          tag_name: 2.2.0
+          files: psalm-vscode-plugin-2.2.0.vsix
