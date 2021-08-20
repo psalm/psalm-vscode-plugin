@@ -1,3 +1,7 @@
+# 2.2.1 - 2021-08-20
+
+-   Set `untrustedWorkspaces.supported` to `false` in `capabilities`. Reasoning: Since this runs Psalm, and Psalm can be configured to execute code on your computer, you should avoid opening untrusted projects while using this plugin
+
 # 2.2.0 - 2021-08-19
 
 -   Add better tracing/debug/logging

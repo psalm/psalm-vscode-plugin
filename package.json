@@ -12,7 +12,7 @@
 		}
 	],
 	"license": "MIT",
-	"version": "2.2.0",
+	"version": "2.2.1",
 	"publisher": "getpsalm",
 	"categories": [
 		"Linters",
@@ -49,8 +49,11 @@
 		"publish": "vsce publish"
 	},
 	"capabilities": {
-		"supported":false,
-		"description": "Since this runs Psalm, and Psalm can be configured to execute code on your computer, you should avoid opening untrusted projects while using this plugin"
+		"untrustedWorkspaces": {
+			"supported":false,
+			"description": "Since this runs Psalm, and Psalm can be configured to execute code on your computer, you should avoid opening untrusted projects while using this plugin"
+		}
+
 	},
 	"extensionKind": ["workspace"],
 	"contributes": {
