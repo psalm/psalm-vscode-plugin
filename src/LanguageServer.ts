@@ -289,19 +289,26 @@ export class LanguageServer {
                             'PHP process disconnected'
                         );
                     });
-                    socket.on('data', (chunk: Buffer) => {
-                        this.loggingService.logDebug(`SERVER ==> ${chunk}\n`);
-                    });
+
+                    if (this.loggingService.getOutputLevel() === 'TRACE') {
+                        socket.on('data', (chunk: Buffer) => {
+                            this.loggingService.logDebug(
+                                `SERVER ==> ${chunk}\n`
+                            );
+                        });
+                    }
 
                     const writeable = new Writable();
 
                     // @ts-ignore
                     writeable.write = (chunk, encoding, callback) => {
-                        this.loggingService.logDebug(
-                            chunk.toString
-                                ? `SERVER <== ${chunk.toString()}\n`
-                                : chunk
-                        );
+                        if (this.loggingService.getOutputLevel() === 'TRACE') {
+                            this.loggingService.logDebug(
+                                chunk.toString
+                                    ? `SERVER <== ${chunk.toString()}\n`
+                                    : chunk
+                            );
+                        }
                         return socket.write(chunk, encoding, callback);
                     };
 
@@ -341,10 +348,10 @@ export class LanguageServer {
             args.unshift('--find-dead-code');
         }
 
-        const enableDebugLog =
-            this.configurationService.get<boolean>('enableDebugLog');
+        const enableVerbose =
+            this.configurationService.get<boolean>('enableVerbose');
 
-        if (enableDebugLog) {
+        if (enableVerbose) {
             args.unshift('--verbose');
         }
 
@@ -374,7 +381,7 @@ export class LanguageServer {
             }
 
             if (
-                enableDebugLog &&
+                enableVerbose &&
                 (await this.checkPsalmLanguageServerHasOption(
                     psalmScriptArgs,
                     '--verbose'
@@ -387,7 +394,7 @@ export class LanguageServer {
                 `Psalm Language Server Version: ${languageServerVersion}`
             );
             psalmScriptArgs.unshift('--use-extended-diagnostic-codes');
-            if (enableDebugLog) {
+            if (enableVerbose) {
                 psalmScriptArgs.unshift('--verbose');
             }
 
@@ -425,7 +432,7 @@ export class LanguageServer {
         childProcess.stderr.on('data', (chunk: Buffer) => {
             this.loggingService.logError(chunk + '');
         });
-        if (enableDebugLog) {
+        if (this.loggingService.getOutputLevel() === 'TRACE') {
             const orig = childProcess.stdin;
 
             childProcess.stdin = new Writable();

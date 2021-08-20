@@ -91,7 +91,27 @@
 				"psalm.enableDebugLog": {
 					"type": "boolean",
 					"default": false,
-					"description": "Enable this to print messages to the debug console when developing or debugging this VS Code extension. (Modifying requires VSCode reload)"
+					"description": "Enable this to print messages to the debug console when developing or debugging this VS Code extension. (Modifying requires VSCode reload)",
+					"deprecationMessage": "Deprecated: Please use psalm.enableVerbose, psalm.logLevel or psalm.trace.server instead."
+				},
+				"psalm.enableVerbose": {
+					"type": "boolean",
+					"default": false,
+					"description": "Enable --verbose mode on the Psalm Language Server (Modifying requires VSCode reload)"
+				},
+				"psalm.logLevel": {
+					"type": "string",
+					"enum": [
+						"NONE",
+						"ERROR",
+						"WARN",
+						"INFO",
+						"DEBUG",
+						"TRACE"
+					],
+					"default": "INFO",
+					"description": "Traces the communication between VSCode and the Psalm language server.",
+					"scope": "window"
 				},
 				"psalm.trace.server": {
 					"type": "string",

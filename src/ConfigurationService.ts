@@ -34,8 +34,8 @@ export class ConfigurationService {
             workspaceConfiguration.get<boolean>('unusedVariableDetection') ||
             false;
 
-        this.config.enableDebugLog =
-            workspaceConfiguration.get<boolean>('enableDebugLog') || false;
+        this.config.enableVerbose =
+            workspaceConfiguration.get<boolean>('enableVerbose') || false;
 
         this.config.connectToServerWithTcp =
             workspaceConfiguration.get<boolean>('connectToServerWithTcp') ||
@@ -44,6 +44,9 @@ export class ConfigurationService {
         this.config.enableUseIniDefaults =
             workspaceConfiguration.get<boolean>('enableUseIniDefaults') ||
             false;
+
+        this.config.logLevel =
+            workspaceConfiguration.get<string>('logLevel') || 'INFO';
 
         this.config.analyzedFileExtensions = workspaceConfiguration.get<
             string[] | DocumentSelector

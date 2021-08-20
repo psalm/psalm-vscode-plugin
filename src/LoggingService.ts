@@ -1,6 +1,6 @@
 import { window, OutputChannel } from 'vscode';
 
-type LogLevel = 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'NONE';
+export type LogLevel = 'TRACE' | 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'NONE';
 
 export class LoggingService {
     private outputChannel = window.createOutputChannel('Psalm Language Server');
@@ -11,8 +11,28 @@ export class LoggingService {
         this.logLevel = logLevel;
     }
 
+    public getOutputLevel(): LogLevel {
+        return this.logLevel;
+    }
+
     public getOutputChannel(): OutputChannel {
         return this.outputChannel;
+    }
+
+    public logTrace(message: string, data?: unknown): void {
+        if (
+            this.logLevel === 'NONE' ||
+            this.logLevel === 'INFO' ||
+            this.logLevel === 'WARN' ||
+            this.logLevel === 'ERROR' ||
+            this.logLevel === 'DEBUG'
+        ) {
+            return;
+        }
+        this.logMessage(message, 'TRACE');
+        if (data) {
+            this.logObject(data);
+        }
     }
 
     /**

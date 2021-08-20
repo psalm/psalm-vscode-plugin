@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { StatusBar } from './StatusBar';
-import { LoggingService } from './LoggingService';
+import { LoggingService, LogLevel } from './LoggingService';
 import { ConfigurationService } from './ConfigurationService';
 import { LanguageServer } from './LanguageServer';
 import { registerCommands } from './commands';
@@ -19,6 +19,12 @@ export async function activate(
     // @ts-ignore
     const configurationService = new ConfigurationService();
     await configurationService.init();
+
+    //Set Logging Level
+    loggingService.setOutputLevel(
+        configurationService.get<LogLevel>('logLevel')
+    );
+
     // @ts-ignore
     const statusBar = new StatusBar();
 
