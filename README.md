@@ -6,6 +6,8 @@
 
 ## Installation
 
+### VSCode Market Place
+
 Install through VS Code extensions. Search for `Psalm (PHP Static Analysis Linting Machine)`
 
 [Psalm (PHP Static Analysis Linting Machine)](https://marketplace.visualstudio.com/items?itemName=getpsalm.psalm-vscode-plugin)
@@ -15,6 +17,12 @@ Can also be installed in VS Code: Launch VS Code Quick Open (Ctrl+P), paste the 
 ```
 ext install getpsalm.psalm-vscode-plugin
 ```
+
+### Open VSX Registry
+
+Install through VS Code extensions. Search for `Psalm (PHP Static Analysis Linting Machine)`
+
+[Psalm (PHP Static Analysis Linting Machine)](https://open-vsx.org/extension/getpsalm/psalm-vscode-plugin)
 
 ## Features
 
