@@ -1,14 +1,24 @@
-# psalm-vscode-plugin
+# Psalm VScode Plugin
 
-Visual Studio Code plugin for Psalm.
+[![build](https://github.com/psalm/psalm-vscode-plugin/actions/workflows/ci.yml/badge.svg)](https://github.com/psalm/psalm-vscode-plugin/actions/workflows/ci.yml)
+
+[Psalm](https://getpsalm.org) is a static analysis tool for finding errors in PHP applications.
+
+## Installation
+
+Install through VS Code extensions. Search for `Psalm (PHP Static Analysis Linting Machine)`
+
+[Psalm (PHP Static Analysis Linting Machine)](https://marketplace.visualstudio.com/items?itemName=getpsalm.psalm-vscode-plugin)
+
+Can also be installed in VS Code: Launch VS Code Quick Open (Ctrl+P), paste the following command, and press enter.
+
+```
+ext install getpsalm.psalm-vscode-plugin
+```
 
 ## Features
 
 -   Runs [Psalm's analysis](https://getpsalm.org) when opening and saving files using the Language Server Protocol for communication.
-
-## Known Security Issues
-
-Since this runs Psalm, and Psalm can be configured to execute code on your computer, you should avoid opening untrusted projects while using this plugin.
 
 ## Contributing
 
