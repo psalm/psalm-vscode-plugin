@@ -17,7 +17,8 @@ jobs:
           node-version: '14'
       - run: npm ci
       - run: npm run package
-      - uses: battila7/get-version-action@v2
+      - id: get_version
+        uses: battila7/get-version-action@v2
       - uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.get_version.outputs.version }}
