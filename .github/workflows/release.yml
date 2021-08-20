@@ -18,6 +18,5 @@ jobs:
       - run: npm ci
       - run: npm run package
       - uses: battila7/get-version-action@v2
-      - uses: softprops/action-gh-release@v1
         with:
-          files: psalm-vscode-plugin-${{ steps.get_version.outputs.version }}.vsix
+          files: psalm-vscode-plugin-2.2.0.vsix
