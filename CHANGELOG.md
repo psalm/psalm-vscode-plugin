@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2021-09-17
+
+### Added
+
+-   New "Report Issue" command (#93)
+-   New "Show Output" command
+-   Extend OutputChannel to be able to buffer output internally for error reporting (up to 1000 lines)
+
 ## [2.2.3] - 2021-09-17
 
 ### Fixed

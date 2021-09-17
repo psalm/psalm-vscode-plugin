@@ -1,11 +1,69 @@
 import { window, OutputChannel } from 'vscode';
 
 export type LogLevel = 'TRACE' | 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'NONE';
-
-export class LoggingService {
+export class LoggingService implements OutputChannel {
     private outputChannel = window.createOutputChannel('Psalm Language Server');
 
     private logLevel: LogLevel = 'DEBUG';
+
+    private content: string[] = [];
+
+    private contentLimit = 1000;
+
+    readonly name: string = 'Psalm Language Server';
+
+    /**
+     * Append the given value to the channel.
+     *
+     * @param value A string, falsy values will not be printed.
+     */
+    append(value: string): void {
+        this.content.push(value);
+        this.content = this.content.slice(-this.contentLimit);
+        this.outputChannel.append(value);
+    }
+
+    /**
+     * Append the given value and a line feed character
+     * to the channel.
+     *
+     * @param value A string, falsy values will be printed.
+     */
+    appendLine(value: string): void {
+        this.content.push(value);
+        this.content = this.content.slice(-this.contentLimit);
+        this.outputChannel.appendLine(value);
+    }
+
+    /**
+     * Removes all output from the channel.
+     */
+    clear(): void {
+        this.outputChannel.clear();
+    }
+
+    /**
+     * Reveal this channel in the UI.
+     *
+     * @param preserveFocus When `true` the channel will not take focus.
+     */
+    show(): void {
+        this.outputChannel.show(...arguments);
+    }
+
+    /**
+     * Hide this channel from the UI.
+     */
+    hide(): void {
+        this.outputChannel.hide();
+    }
+
+    /**
+     * Dispose and free associated resources.
+     */
+    dispose(): void {
+        this.outputChannel.dispose();
+    }
 
     public setOutputLevel(logLevel: LogLevel) {
         this.logLevel = logLevel;
@@ -13,10 +71,6 @@ export class LoggingService {
 
     public getOutputLevel(): LogLevel {
         return this.logLevel;
-    }
-
-    public getOutputChannel(): OutputChannel {
-        return this.outputChannel;
     }
 
     public logTrace(message: string, data?: unknown): void {
@@ -97,25 +151,25 @@ export class LoggingService {
         if (typeof error === 'string') {
             // Errors as a string usually only happen with
             // plugins that don't return the expected error.
-            this.outputChannel.appendLine(error);
+            this.appendLine(error);
         } else if (error?.message || error?.stack) {
             if (error?.message) {
                 this.logMessage(error.message, 'ERROR');
             }
             if (error?.stack) {
-                this.outputChannel.appendLine(error.stack);
+                this.appendLine(error.stack);
             }
         } else if (error) {
             this.logObject(error);
         }
     }
 
-    public show() {
-        this.outputChannel.show();
+    public getContent(): string[] {
+        return this.content;
     }
 
     private logObject(data: unknown): void {
-        this.outputChannel.appendLine(JSON.stringify(data, null, 2));
+        this.appendLine(JSON.stringify(data, null, 2));
     }
 
     /**
@@ -125,6 +179,6 @@ export class LoggingService {
      */
     private logMessage(message: string, logLevel: LogLevel): void {
         const title = new Date().toLocaleTimeString();
-        this.outputChannel.appendLine(`[${logLevel} - ${title}] ${message}`);
+        this.appendLine(`[${logLevel} - ${title}] ${message}`);
     }
 }

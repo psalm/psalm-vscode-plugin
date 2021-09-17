@@ -12,7 +12,10 @@
 		}
 	],
 	"license": "MIT",
-	"version": "2.2.3",
+	"bugs": {
+		"url": "https://github.com/psalm/psalm-vscode-plugin/issues"
+	},
+	"version": "2.3.0",
 	"publisher": "getpsalm",
 	"categories": [
 		"Linters",
@@ -50,12 +53,13 @@
 	},
 	"capabilities": {
 		"untrustedWorkspaces": {
-			"supported":false,
+			"supported": false,
 			"description": "Since this runs Psalm, and Psalm can be configured to execute code on your computer, you should avoid opening untrusted projects while using this plugin"
 		}
-
 	},
-	"extensionKind": ["workspace"],
+	"extensionKind": [
+		"workspace"
+	],
 	"contributes": {
 		"configuration": {
 			"type": "object",
@@ -183,6 +187,16 @@
 				"command": "psalm.analyzeWorkSpace",
 				"title": "Analyze Workspace",
 				"category": "Psalm"
+			},
+			{
+				"command": "psalm.reportIssue",
+				"title": "Report Issue",
+				"category": "Psalm"
+			},
+			{
+				"command": "psalm.showOutput",
+				"title": "Show Output",
+				"category": "Psalm"
 			}
 		],
 		"menus": {
@@ -192,6 +206,12 @@
 				},
 				{
 					"command": "psalm.analyzeWorkSpace"
+				},
+				{
+					"command": "psalm.reportIssue"
+				},
+				{
+					"command": "psalm.showOutput"
 				}
 			]
 		}
@@ -211,6 +231,8 @@
 		"webpack-cli": "^4.8.0"
 	},
 	"dependencies": {
+		"@types/fs-extra": "^9.0.12",
+		"fs-extra": "^10.0.0",
 		"mz": "^2.7.0",
 		"promisify-child-process": "^4.1.1",
 		"semver": "^7.3.5",

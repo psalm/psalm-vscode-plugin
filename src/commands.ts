@@ -2,6 +2,12 @@ import * as vscode from 'vscode';
 import { ExitNotification } from 'vscode-languageclient/node';
 import * as semver from 'semver';
 import { LanguageServer } from './LanguageServer';
+import * as path from 'path';
+import { EXTENSION_ROOT_DIR } from './constants';
+import { formatFromTemplate } from './utils';
+import { ConfigurationService } from './ConfigurationService';
+import { LoggingService } from './LoggingService';
+import { EOL } from 'os';
 interface Command {
     id: string;
     execute(): void;
@@ -42,10 +48,76 @@ function restartPsalmServer(client: LanguageServer): Command {
     };
 }
 
-export function registerCommands(client: LanguageServer): vscode.Disposable[] {
+function reportIssue(
+    client: LanguageServer,
+    configurationService: ConfigurationService,
+    loggingService: LoggingService
+): Command {
+    return {
+        id: 'psalm.reportIssue',
+        async execute() {
+            const templatePath = path.join(
+                EXTENSION_ROOT_DIR,
+                'resources',
+                'report_issue_template.md'
+            );
+
+            const userSettings = Object.entries(configurationService.getAll())
+                .map(([key, value]) => `${key}: ${JSON.stringify(value)}`)
+                .join(EOL);
+            const psalmLogs = loggingService.getContent().join(EOL);
+
+            let phpVersion = 'unknown';
+            try {
+                phpVersion = (await client.getPHPVersion()) ?? 'unknown';
+            } catch (err) {
+                phpVersion = err.message;
+            }
+
+            let psalmVersion: string | null = 'unknown';
+            try {
+                psalmVersion =
+                    (await client.getPsalmLanguageServerVersion()) ?? 'unknown';
+            } catch (err) {
+                psalmVersion = err.message;
+            }
+
+            await vscode.commands.executeCommand(
+                'workbench.action.openIssueReporter',
+                {
+                    extensionId: 'getpsalm.psalm-vscode-plugin',
+                    issueBody: await formatFromTemplate(
+                        templatePath,
+                        phpVersion, // 0
+                        psalmVersion, // 1
+                        psalmLogs, // 2
+                        userSettings // 3
+                    ),
+                }
+            );
+        },
+    };
+}
+
+function showOutput(loggingService: LoggingService): Command {
+    return {
+        id: 'psalm.showOutput',
+        async execute() {
+            loggingService.show();
+        },
+    };
+}
+
+export function registerCommands(
+    client: LanguageServer,
+    configurationService: ConfigurationService,
+    loggingService: LoggingService
+): vscode.Disposable[] {
     const commands: Command[] = [
         restartPsalmServer(client),
         analyzeWorkSpace(client),
+        reportIssue(client, configurationService, loggingService),
+        showOutput(loggingService),
     ];
 
     const disposables = commands.map((command) => {

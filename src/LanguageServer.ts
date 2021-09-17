@@ -1,4 +1,8 @@
-import { LanguageClient, StreamInfo } from 'vscode-languageclient/node';
+import {
+    LanguageClient,
+    StreamInfo,
+    ErrorHandler,
+} from 'vscode-languageclient/node';
 import { StatusBar, LanguageServerStatus } from './StatusBar';
 import { spawn, ChildProcess } from 'child_process';
 import { workspace, Uri, Disposable, ExtensionContext } from 'vscode';
@@ -7,6 +11,7 @@ import { DocumentSelector } from 'vscode-languageserver-protocol';
 import { join, isAbsolute } from 'path';
 import { execFile } from 'promisify-child-process';
 import { ConfigurationService } from './ConfigurationService';
+import LanguageServerErrorHandler from './LanguageServerErrorHandler';
 import { statSync, constants } from 'fs';
 import { access } from 'fs/promises';
 import * as semver from 'semver';
@@ -28,71 +33,6 @@ export class LanguageServer {
     private serverProcess: ChildProcess | null = null;
     private context: ExtensionContext;
 
-    public static async getInstance(
-        context: ExtensionContext,
-        workspacePath: string,
-        statusBar: StatusBar,
-        configurationService: ConfigurationService,
-        loggingService: LoggingService
-    ): Promise<LanguageServer | null> {
-        await configurationService.init();
-
-        const configPaths = configurationService.get<string[]>('configPaths');
-
-        if (!configPaths.length) {
-            loggingService.logError(
-                `No Config Paths defined. Define some and try again`
-            );
-            return null;
-        }
-
-        const psalmXML = await workspace.findFiles(
-            `{${configPaths.join(',')}}`
-            // `**/vendor/**/{${configPaths.join(',')}}`
-        );
-        if (!psalmXML.length) {
-            // no psalm.xml found
-            loggingService.logError(
-                `No Config file found in: ${configPaths.join(',')}`
-            );
-            return null;
-        }
-        const configXml = psalmXML[0].path;
-
-        loggingService.logDebug(`Found config file: ${configXml}`);
-
-        const configWatcher = workspace.createFileSystemWatcher(configXml);
-
-        const languageServer = new LanguageServer(
-            context,
-            workspacePath,
-            configXml,
-            statusBar,
-            configurationService,
-            loggingService
-        );
-
-        const onConfigChange = () => {
-            loggingService.logInfo(`Config file changed: ${configXml}`);
-            languageServer.restart();
-        };
-
-        const onConfigDelete = () => {
-            loggingService.logInfo(`Config file deleted: ${configXml}`);
-            languageServer.stop();
-        };
-
-        // Restart the language server when the tracked config file changes
-        configWatcher.onDidChange(onConfigChange);
-        configWatcher.onDidCreate(onConfigChange);
-        configWatcher.onDidDelete(onConfigDelete);
-
-        // Start Lanuage Server
-        await languageServer.start();
-
-        return languageServer;
-    }
-
     constructor(
         context: ExtensionContext,
         workspacePath: string,
@@ -113,8 +53,8 @@ export class LanguageServer {
             'Psalm Language Server',
             this.serverOptions.bind(this),
             {
-                outputChannel: this.loggingService.getOutputChannel(),
-                traceOutputChannel: this.loggingService.getOutputChannel(),
+                outputChannel: this.loggingService,
+                traceOutputChannel: this.loggingService,
                 // Register the server for php (and maybe HTML) documents
                 documentSelector: this.configurationService.get<
                     string[] | DocumentSelector
@@ -135,6 +75,7 @@ export class LanguageServer {
                     ],
                 },
                 progressOnInitialization: true,
+                errorHandler: this.createDefaultErrorHandler(5),
             },
             this.debug
         );
@@ -146,6 +87,13 @@ export class LanguageServer {
         });
 
         this.languageClient.onTelemetry(this.onTelemetry.bind(this));
+    }
+
+    public createDefaultErrorHandler(maxRestartCount?: number): ErrorHandler {
+        if (maxRestartCount !== undefined && maxRestartCount < 0) {
+            throw new Error(`Invalid maxRestartCount: ${maxRestartCount}`);
+        }
+        return new LanguageServerErrorHandler('Thing', maxRestartCount ?? 4);
     }
 
     private onTelemetry(params: any) {
@@ -489,6 +437,15 @@ export class LanguageServer {
         } catch (err) {
             return false;
         }
+    }
+
+    /**
+     * Get the PHP version
+     * @return Promise<string> A promise that resolves to the php version (Or null)
+     */
+    public async getPHPVersion(): Promise<string | null> {
+        const out = await this.executePhp(['--version']);
+        return out;
     }
 
     /**

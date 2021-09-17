@@ -103,10 +103,16 @@ export async function activate(
     configWatcher.onDidCreate(onConfigChange);
     configWatcher.onDidDelete(onConfigDelete);
 
+    context.subscriptions.push(
+        ...registerCommands(
+            languageServer,
+            configurationService,
+            loggingService
+        )
+    );
+
     // Start Lanuage Server
     await languageServer.start();
-
-    context.subscriptions.push(...registerCommands(languageServer));
 
     vscode.workspace.onDidChangeConfiguration(async (change) => {
         if (

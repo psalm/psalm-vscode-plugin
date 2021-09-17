@@ -79,4 +79,8 @@ export class ConfigurationService {
         }
         return this.config[key];
     }
+
+    public getAll(): { [key: string]: any } {
+        return this.config;
+    }
 }
