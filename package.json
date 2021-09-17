@@ -12,7 +12,7 @@
 		}
 	],
 	"license": "MIT",
-	"version": "2.2.2",
+	"version": "2.2.3",
 	"publisher": "getpsalm",
 	"categories": [
 		"Linters",

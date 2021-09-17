@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.3] - 2021-09-17
+
+### Fixed
+
+-   Could not resolve path to config on windows (#84) [@glen-84]
+
 ## [2.2.2] - 2021-08-20
 
 ### Added
