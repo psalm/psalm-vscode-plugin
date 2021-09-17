@@ -39,6 +39,8 @@ export async function activate(
 
     const workspacePath = workspaceFolders[0].uri.fsPath;
 
+    loggingService.logInfo(`Workspace path: ${workspacePath}`);
+
     const configPaths = configurationService.get<string[]>('configPaths') || [];
 
     if (!configPaths.length) {

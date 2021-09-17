@@ -4,7 +4,7 @@ import { spawn, ChildProcess } from 'child_process';
 import { workspace, Uri, Disposable, ExtensionContext } from 'vscode';
 import { format, URL } from 'url';
 import { DocumentSelector } from 'vscode-languageserver-protocol';
-import { join, isAbsolute } from 'path';
+import { join, isAbsolute, dirname } from 'path';
 import { execFile } from 'promisify-child-process';
 import { ConfigurationService } from './ConfigurationService';
 import { statSync, constants } from 'fs';
@@ -618,22 +618,40 @@ export class LanguageServer {
     }
 
     /**
-     * Resolve Pslam Script Path if absolute or relative
+     * Resolve Psalm Script Path if absolute or relative
      */
     private async resolvePsalmScriptPath(): Promise<string> {
         const psalmScriptPath =
             this.configurationService.get<string>('psalmScriptPath');
 
-        if (!psalmScriptPath) {
+        const enableFallback =
+            this.configurationService.get<boolean>('enableFallback');
+
+        if (!enableFallback && !psalmScriptPath) {
             await showErrorMessage(
                 `Unable to find Psalm Language Server. Please set psalm.psalmScriptPath`
             );
             throw new Error('psalmScriptPath is not set');
         }
 
-        if (isAbsolute(psalmScriptPath)) {
-            return psalmScriptPath;
+        const fullPath = isAbsolute(psalmScriptPath)
+            ? psalmScriptPath
+            : join(this.workspacePath, psalmScriptPath);
+
+        try {
+            await access(fullPath, constants.F_OK);
+            return fullPath;
+        } catch {
+            if (!enableFallback) {
+                const msg = `${psalmScriptPath} does not exist. Please set a valid path to psalm.psalmScriptPath`;
+                await showErrorMessage(`Psalm can not start: ${msg}`);
+                throw new Error(msg);
+            } else {
+                this.loggingService.logWarning(
+                    `${psalmScriptPath} does not exist but Fallback was enabled so using bundled Psalm phar`
+                );
+                return dirname(__dirname) + '/bin/psalm.phar';
+            }
         }
-        return join(this.workspacePath, psalmScriptPath);
     }
 }

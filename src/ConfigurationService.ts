@@ -37,6 +37,9 @@ export class ConfigurationService {
         this.config.enableVerbose =
             workspaceConfiguration.get<boolean>('enableVerbose') || false;
 
+        this.config.enableFallback =
+            workspaceConfiguration.get<boolean>('enableFallback') || true;
+
         this.config.connectToServerWithTcp =
             workspaceConfiguration.get<boolean>('connectToServerWithTcp') ||
             false;

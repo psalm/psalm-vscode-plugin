@@ -95,6 +95,11 @@
 					"default": false,
 					"description": "Enable this to use PHP-provided ini defaults for memory and error display. (Modifying requires restart)"
 				},
+				"psalm.enableFallback": {
+					"type": "boolean",
+					"default": true,
+					"description": "Enable to allow using the self-contained Psalm.phar binary if psalm can not be found using psalm.psalmScriptPath"
+				},
 				"psalm.enableDebugLog": {
 					"type": "boolean",
 					"default": false,
