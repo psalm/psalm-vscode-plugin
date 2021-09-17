@@ -48,20 +48,34 @@ export async function activate(
         return;
     }
 
-    const psalmXML = await vscode.workspace.findFiles(
+    const psalmXMLFiles = await vscode.workspace.findFiles(
         `{${configPaths.join(',')}}`
         // `**/vendor/**/{${configPaths.join(',')}}`
     );
-    if (!psalmXML.length) {
+
+    const psalmXMLPaths = psalmXMLFiles.map((uri) => {
+        if (process.platform === 'win32') {
+            return uri.path.replace(/\//g, '\\').replace(/^\\/g, '');
+        }
+        return uri.path;
+    });
+
+    if (!psalmXMLPaths.length) {
         // no psalm.xml found
         loggingService.logError(
             `No Config file found in: ${configPaths.join(',')}`
         );
         return;
     }
-    const configXml = psalmXML[0].path;
 
-    loggingService.logDebug(`Found config file: ${configXml}`);
+    loggingService.logDebug(
+        `Found the following Psalm XML Configs:`,
+        psalmXMLPaths
+    );
+
+    const configXml = psalmXMLPaths[0];
+
+    loggingService.logDebug(`Selecting first found config file: ${configXml}`);
 
     const configWatcher = vscode.workspace.createFileSystemWatcher(configXml);
 
