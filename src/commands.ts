@@ -13,11 +13,16 @@ interface Command {
     execute(): void;
 }
 
-async function restartSever(client: LanguageServer) {
+async function restartSever(
+    client: LanguageServer,
+    configurationService: ConfigurationService
+) {
     const languageServerVersion = await client.getPsalmLanguageServerVersion();
     if (languageServerVersion === null) {
         const reload = await vscode.window.showWarningMessage(
-            'This version of Psalm has a bug in that the only way to force the Language Server to re-analyze the workspace is to forcefully crash it. VSCode limitations only allow us to do this 5 times per session. Consider upgrading to at least 4.9.0 of Psalm',
+            `This version of Psalm has a bug in that the only way to force the Language Server to re-analyze the workspace is to forcefully crash it. VSCode limitations only allow us to do this ${configurationService.get<number>(
+                'maxRestartCount'
+            )} times per session. Consider upgrading to at least 4.9.0 of Psalm`,
             'Ok',
             'Cancel'
         );
@@ -30,20 +35,26 @@ async function restartSever(client: LanguageServer) {
     }
 }
 
-function analyzeWorkSpace(client: LanguageServer): Command {
+function analyzeWorkSpace(
+    client: LanguageServer,
+    configurationService: ConfigurationService
+): Command {
     return {
         id: 'psalm.analyzeWorkSpace',
         async execute() {
-            return await restartSever(client);
+            return await restartSever(client, configurationService);
         },
     };
 }
 
-function restartPsalmServer(client: LanguageServer): Command {
+function restartPsalmServer(
+    client: LanguageServer,
+    configurationService: ConfigurationService
+): Command {
     return {
         id: 'psalm.restartPsalmServer',
         async execute() {
-            return await restartSever(client);
+            return await restartSever(client, configurationService);
         },
     };
 }
@@ -114,8 +125,8 @@ export function registerCommands(
     loggingService: LoggingService
 ): vscode.Disposable[] {
     const commands: Command[] = [
-        restartPsalmServer(client),
-        analyzeWorkSpace(client),
+        restartPsalmServer(client, configurationService),
+        analyzeWorkSpace(client, configurationService),
         reportIssue(client, configurationService, loggingService),
         showOutput(loggingService),
     ];

@@ -30,6 +30,9 @@ export class ConfigurationService {
             workspaceConfiguration.get<string>('psalmScriptPath') ||
             join('vendor', 'vimeo', 'psalm', 'psalm-language-server');
 
+        this.config.maxRestartCount =
+            workspaceConfiguration.get<number>('maxRestartCount') || 5;
+
         this.config.unusedVariableDetection =
             workspaceConfiguration.get<boolean>('unusedVariableDetection') ||
             false;

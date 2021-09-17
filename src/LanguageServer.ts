@@ -75,7 +75,9 @@ export class LanguageServer {
                     ],
                 },
                 progressOnInitialization: true,
-                errorHandler: this.createDefaultErrorHandler(5),
+                errorHandler: this.createDefaultErrorHandler(
+                    this.configurationService.get<number>('maxRestartCount') - 1
+                ),
             },
             this.debug
         );
@@ -93,7 +95,10 @@ export class LanguageServer {
         if (maxRestartCount !== undefined && maxRestartCount < 0) {
             throw new Error(`Invalid maxRestartCount: ${maxRestartCount}`);
         }
-        return new LanguageServerErrorHandler('Thing', maxRestartCount ?? 4);
+        return new LanguageServerErrorHandler(
+            'Psalm Language Server',
+            maxRestartCount ?? 4
+        );
     }
 
     private onTelemetry(params: any) {
