@@ -241,7 +241,7 @@
 		"mz": "^2.7.0",
 		"promisify-child-process": "^4.1.1",
 		"semver": "^7.3.5",
-		"vscode-languageclient": "^7.0.0-next.5",
+		"vscode-languageclient": "^8.0.0-next.4",
 		"which": "^2.0.2"
 	}
 }
