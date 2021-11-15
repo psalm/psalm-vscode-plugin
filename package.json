@@ -87,6 +87,14 @@
 					"default": null,
 					"description": "Optional (Advanced). If provided, this overrides the Psalm script to use, e.g. vendor/bin/psalm-language-server. (Modifying requires VSCode reload)"
 				},
+				"psalm.psalmScriptArgs": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default": [],
+					"description": "Optional (Advanced). Additional arguments to the Psalm language server. (Modifying requires VSCode reload)"
+				},
 				"psalm.psalmClientScriptPath": {
 					"type": "string",
 					"default": null,
