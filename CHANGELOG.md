@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.0] - 2021-11-15
+
+### Added
+
+-   Allow setting arbitrary language server parameters (#123) [@Nadyita]
+
 ## [2.3.0] - 2021-09-17
 
 ### Added
