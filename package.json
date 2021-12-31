@@ -244,7 +244,7 @@
 		"webpack-cli": "^4.8.0"
 	},
 	"dependencies": {
-		"@types/fs-extra": "^9.0.12",
+		"@types/fs-extra": "^9.0.13",
 		"fs-extra": "^10.0.0",
 		"mz": "^2.7.0",
 		"promisify-child-process": "^4.1.1",
