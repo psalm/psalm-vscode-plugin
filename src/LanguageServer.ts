@@ -72,6 +72,7 @@ export class LanguageServer {
                     fileEvents: [
                         // this is for when files get changed outside of vscode
                         workspace.createFileSystemWatcher('**/*.php'),
+                        workspace.createFileSystemWatcher('**/composer.lock'),
                     ],
                 },
                 progressOnInitialization: true,
@@ -293,9 +294,8 @@ export class LanguageServer {
         const languageServerVersion: string | null =
             await this.getPsalmLanguageServerVersion();
 
-        const extraServerArgs = this.configurationService.get<string[]>(
-            'psalmScriptArgs'
-        );
+        const extraServerArgs =
+            this.configurationService.get<string[]>('psalmScriptArgs');
 
         if (extraServerArgs) {
             if (Array.isArray(extraServerArgs)) {
