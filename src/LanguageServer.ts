@@ -19,6 +19,7 @@ import { LoggingService } from './LoggingService';
 import { Writable } from 'stream';
 import { createServer } from 'net';
 import { showOpenSettingsPrompt, showErrorMessage } from './utils';
+
 export class LanguageServer {
     private languageClient: LanguageClient;
     private workspacePath: string;
@@ -72,6 +73,7 @@ export class LanguageServer {
                     fileEvents: [
                         // this is for when files get changed outside of vscode
                         workspace.createFileSystemWatcher('**/*.php'),
+                        // workspace.createFileSystemWatcher('**/composer.lock')
                     ],
                 },
                 progressOnInitialization: true,
@@ -293,9 +295,8 @@ export class LanguageServer {
         const languageServerVersion: string | null =
             await this.getPsalmLanguageServerVersion();
 
-        const extraServerArgs = this.configurationService.get<string[]>(
-            'psalmScriptArgs'
-        );
+        const extraServerArgs =
+            this.configurationService.get<string[]>('psalmScriptArgs');
 
         if (extraServerArgs) {
             if (Array.isArray(extraServerArgs)) {
@@ -316,6 +317,14 @@ export class LanguageServer {
 
         if (enableVerbose) {
             args.unshift('--verbose');
+        }
+
+        const disableAutoComplete = this.configurationService.get<boolean>(
+            'disableAutoComplete'
+        );
+
+        if (disableAutoComplete) {
+            args.unshift('--enable-autocomplete=false');
         }
 
         // Are we running psalm or psalm-language-server

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+-   Option to disable autocomplete on methods and properties
+
+### Fixed
+
+-   Updated LoggingService to support new replace method
+
 ## [2.4.0] - 2021-11-15
 
 ### Added

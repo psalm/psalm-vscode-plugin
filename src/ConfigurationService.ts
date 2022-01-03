@@ -30,9 +30,11 @@ export class ConfigurationService {
             workspaceConfiguration.get<string>('psalmScriptPath') ||
             join('vendor', 'vimeo', 'psalm', 'psalm-language-server');
 
-        this.config.psalmScriptArgs = workspaceConfiguration.get<string[]>(
-            'psalmScriptArgs'
-        ) || [];
+        this.config.psalmScriptArgs =
+            workspaceConfiguration.get<string[]>('psalmScriptArgs') || [];
+
+        this.config.disableAutoComplete =
+            workspaceConfiguration.get<boolean>('disableAutoComplete') || false;
 
         this.config.maxRestartCount =
             workspaceConfiguration.get<number>('maxRestartCount') || 5;

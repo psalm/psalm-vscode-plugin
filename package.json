@@ -167,6 +167,11 @@
 					"default": false,
 					"description": "If this is set to true, this VSCode extension will use TCP instead of the default STDIO to communicate with the Psalm language server. (Modifying requires VSCode reload)"
 				},
+				"psalm.disableAutoComplete": {
+					"type": "boolean",
+					"default": false,
+					"description": "Enable to disable autocomplete on methods and properties (Modifying requires VSCode reload)"
+				},
 				"psalm.configPaths": {
 					"type": "array",
 					"items": {

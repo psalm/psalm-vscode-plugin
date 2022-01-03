@@ -49,6 +49,7 @@ export class LoggingService implements OutputChannel {
      * Removes all output from the channel.
      */
     clear(): void {
+        this.content = [];
         this.outputChannel.clear();
     }
 
