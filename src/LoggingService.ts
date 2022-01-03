@@ -13,6 +13,16 @@ export class LoggingService implements OutputChannel {
     readonly name: string = 'Psalm Language Server';
 
     /**
+     * Replaces all output from the channel with the given value.
+     *
+     * @param value A string, falsy values will not be printed.
+     */
+    replace(value: string): void {
+        this.content = [value];
+        this.outputChannel.replace(value);
+    }
+
+    /**
      * Append the given value to the channel.
      *
      * @param value A string, falsy values will not be printed.
