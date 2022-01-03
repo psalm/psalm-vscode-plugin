@@ -15,7 +15,7 @@
 	"bugs": {
 		"url": "https://github.com/psalm/psalm-vscode-plugin/issues"
 	},
-	"version": "2.4.0",
+	"version": "2.5.0",
 	"publisher": "getpsalm",
 	"categories": [
 		"Linters",
