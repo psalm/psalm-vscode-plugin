@@ -73,7 +73,7 @@ export class LanguageServer {
                     fileEvents: [
                         // this is for when files get changed outside of vscode
                         workspace.createFileSystemWatcher('**/*.php'),
-                        // workspace.createFileSystemWatcher('**/composer.lock')
+                        workspace.createFileSystemWatcher('**/composer.lock'),
                     ],
                 },
                 progressOnInitialization: true,
@@ -393,8 +393,6 @@ export class LanguageServer {
         const psalmScriptPath = await this.resolvePsalmScriptPath();
         args.unshift('-f', psalmScriptPath);
 
-        this.loggingService.logInfo('Starting Psalm Language Server');
-
         const { file, args: fileArgs } = await this.getPhpArgs(args);
 
         const childProcess = spawn(file, fileArgs, {
@@ -487,25 +485,37 @@ export class LanguageServer {
             throw new Error(msg);
         }
 
+        const psalmVersionOverride = this.configurationService.get<
+            string | null
+        >('psalmVersion');
+
+        if (psalmVersionOverride !== null) {
+            this.loggingService.logWarning(
+                `Psalm Version was overridden to "${psalmVersionOverride}". If this is not intentional please clear the Psalm Version Setting`
+            );
+            return psalmVersionOverride;
+        }
+
         try {
             const args: string[] = ['-f', psalmScriptPath, '--', '--version'];
             const out = await this.executePhp(args);
             // Psalm 4.8.1@f73f2299dbc59a3e6c4d66cff4605176e728ee69
             const ret = out.match(/^Psalm\s*((?:[0-9]+\.?)+)@([0-9a-f]{40})/);
             if (ret === null || ret.length !== 3) {
+                this.loggingService.logWarning(
+                    `Psalm Version could not be parsed as a Semantic Version. Got "${out}". Assuming unknown`
+                );
                 return null;
             }
             const [, version] = ret;
+            this.loggingService.logInfo(
+                `Psalm Version was detected as ${version}`
+            );
             return version;
         } catch (err) {
-            if (
-                /Use of undefined constant PSALM_VERSION - assumed 'PSALM_VERSION'/g.test(
-                    String(err.message)
-                )
-            ) {
-                // Could technically return  4.8.1
-                return null;
-            }
+            this.loggingService.logWarning(
+                `Psalm Version could not be detected. Got "${err.message}". Assuming unknown`
+            );
             return null;
         }
     }

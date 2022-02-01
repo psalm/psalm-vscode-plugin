@@ -82,6 +82,11 @@
 					],
 					"description": "Optional (Advanced), default is '-dxdebug.remote_autostart=0 -dxdebug.remote_enable=0 -dxdebug_profiler_enable=0'.  Additional PHP executable CLI arguments to use. (Modifying requires VSCode reload)"
 				},
+				"psalm.psalmVersion": {
+					"type": "string",
+					"default": null,
+					"description": "Optional (Advanced). If provided, this overrides the Psalm version detection (Modifying requires VSCode reload)"
+				},
 				"psalm.psalmScriptPath": {
 					"type": "string",
 					"default": null,
@@ -243,10 +248,10 @@
 		"prettier": "^2.5.1",
 		"ts-loader": "^9.2.6",
 		"tslint": "^6.1.3",
-		"typescript": "^4.5.4",
-		"vsce": "^2.6.2",
-		"webpack": "^5.65.0",
-		"webpack-cli": "^4.9.1"
+		"typescript": "^4.5.5",
+		"vsce": "^2.6.6",
+		"webpack": "^5.68.0",
+		"webpack-cli": "^4.9.2"
 	},
 	"dependencies": {
 		"@types/fs-extra": "^9.0.13",

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.0] - 2022-02-01
+
+### Added
+
+-   Option to forcefully set the Psalm Version instead of auto detecting
+
+### Changed
+
+-   Cleaned up logger outputs
+-   Added watching of the composer.lock file (ignored on server for now)
+
 ## [2.5.0] - 2022-01-03
 
 ### Added

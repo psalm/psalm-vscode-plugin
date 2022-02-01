@@ -26,6 +26,9 @@ export class ConfigurationService {
             '-dxdebug_profiler_enable=0',
         ];
 
+        this.config.psalmVersion =
+            workspaceConfiguration.get<string>('psalmVersion') || null;
+
         this.config.psalmScriptPath =
             workspaceConfiguration.get<string>('psalmScriptPath') ||
             join('vendor', 'vimeo', 'psalm', 'psalm-language-server');

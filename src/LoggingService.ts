@@ -190,6 +190,6 @@ export class LoggingService implements OutputChannel {
      */
     private logMessage(message: string, logLevel: LogLevel): void {
         const title = new Date().toLocaleTimeString();
-        this.appendLine(`[${logLevel} - ${title}] ${message}`);
+        this.appendLine(`[${logLevel}  - ${title}] ${message}`);
     }
 }
