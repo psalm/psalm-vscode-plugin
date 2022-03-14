@@ -255,7 +255,7 @@
 	},
 	"dependencies": {
 		"@types/fs-extra": "^9.0.13",
-		"fs-extra": "^10.0.0",
+		"fs-extra": "^10.0.1",
 		"mz": "^2.7.0",
 		"promisify-child-process": "^4.1.1",
 		"semver": "^7.3.5",
