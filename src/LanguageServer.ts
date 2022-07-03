@@ -2,6 +2,7 @@ import {
     LanguageClient,
     StreamInfo,
     ErrorHandler,
+    RevealOutputChannelOn,
 } from 'vscode-languageclient/node';
 import { StatusBar, LanguageServerStatus } from './StatusBar';
 import { spawn, ChildProcess } from 'child_process';
@@ -56,6 +57,7 @@ export class LanguageServer {
             {
                 outputChannel: this.loggingService,
                 traceOutputChannel: this.loggingService,
+                revealOutputChannelOn: RevealOutputChannelOn.Never,
                 // Register the server for php (and maybe HTML) documents
                 documentSelector: this.configurationService.get<
                     string[] | DocumentSelector
