@@ -147,17 +147,22 @@ export async function activate(
     });
 
     vscode.window.onDidChangeActiveTextEditor((e) => {
-        if (!vscode.window.activeTextEditor) {
+        if (!e) {
             return;
         }
 
-        activeWorkspace = vscode.workspace.getWorkspaceFolder(
-            vscode.window.activeTextEditor.document.uri
+        const tmpActiveWorkspace = vscode.workspace.getWorkspaceFolder(
+            e.document.uri
         );
 
-        workspacePath = activeWorkspace
-            ? activeWorkspace.uri.fsPath
+        const tmpWorkspacePath = tmpActiveWorkspace
+            ? tmpActiveWorkspace.uri.fsPath
             : workspaceFolders[0].uri.fsPath;
+
+        if (!tmpWorkspacePath || workspacePath === tmpWorkspacePath) return;
+
+        activeWorkspace = tmpActiveWorkspace;
+        workspacePath = tmpWorkspacePath;
 
         onWorkspacePathChange();
     });
