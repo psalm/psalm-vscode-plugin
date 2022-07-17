@@ -101,9 +101,6 @@ export async function activate(
     // restart the language server when changing workspaces
     const onWorkspacePathChange = async () => {
         loggingService.logInfo(`Workspace changed: ${workspacePath}`);
-        loggingService.logInfo(
-            `Creating a new language server for workspace: ${workspacePath}`
-        );
         languageServer.setWorkspacePath(workspacePath);
         languageServer.restart();
     };
