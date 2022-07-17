@@ -37,19 +37,60 @@ export async function activate(
         return;
     }
 
-    // const workspacePath = workspaceFolders[0].uri.fsPath;
+    const getCurrentWorkspace = (
+        workspaceFolders: readonly vscode.WorkspaceFolder[]
+    ) => {
+        const activeWorkspace = vscode.window.activeTextEditor
+            ? vscode.workspace.getWorkspaceFolder(
+                  vscode.window.activeTextEditor.document.uri
+              )
+            : undefined;
 
-    let activeWorkspace = vscode.window.activeTextEditor
-        ? vscode.workspace.getWorkspaceFolder(
-              vscode.window.activeTextEditor.document.uri
-          )
-        : undefined;
+        const workspacePath = activeWorkspace
+            ? activeWorkspace.uri.fsPath
+            : workspaceFolders[0].uri.fsPath;
 
-    let workspacePath = activeWorkspace
-        ? activeWorkspace.uri.fsPath
-        : workspaceFolders[0].uri.fsPath;
+        return { workspacePath };
+    };
 
-    const configPaths = configurationService.get<string[]>('configPaths') || [];
+    const getOptions = async () => {
+        const configPaths =
+            configurationService.get<string[]>('configPaths') || [];
+
+        const psalmXMLFiles = await vscode.workspace.findFiles(
+            `{${configPaths.join(',')}}`
+            // `**/vendor/**/{${configPaths.join(',')}}`
+        );
+
+        const psalmXMLPaths = psalmXMLFiles.map((uri) => {
+            if (process.platform === 'win32') {
+                return uri.path.replace(/\//g, '\\').replace(/^\\/g, '');
+            }
+            return uri.path;
+        });
+
+        const { workspacePath } = getCurrentWorkspace(workspaceFolders);
+
+        const configXml =
+            psalmXMLPaths.find((path) => path.startsWith(workspacePath)) ??
+            psalmXMLPaths[0];
+
+        return {
+            configPaths,
+            psalmXMLFiles,
+            psalmXMLPaths,
+            configXml,
+            workspacePath,
+        };
+    };
+
+    let {
+        configPaths,
+        // psalmXMLFiles,
+        psalmXMLPaths,
+        configXml,
+        workspacePath,
+    } = await getOptions();
 
     if (!configPaths.length) {
         loggingService.logError(
@@ -57,18 +98,6 @@ export async function activate(
         );
         return;
     }
-
-    const psalmXMLFiles = await vscode.workspace.findFiles(
-        `{${configPaths.join(',')}}`
-        // `**/vendor/**/{${configPaths.join(',')}}`
-    );
-
-    const psalmXMLPaths = psalmXMLFiles.map((uri) => {
-        if (process.platform === 'win32') {
-            return uri.path.replace(/\//g, '\\').replace(/^\\/g, '');
-        }
-        return uri.path;
-    });
 
     if (!psalmXMLPaths.length) {
         // no psalm.xml found
@@ -83,11 +112,9 @@ export async function activate(
         psalmXMLPaths
     );
 
-    const configXml = psalmXMLPaths[0];
-
     loggingService.logDebug(`Selecting first found config file: ${configXml}`);
 
-    const configWatcher = vscode.workspace.createFileSystemWatcher(configXml);
+    let configWatcher = vscode.workspace.createFileSystemWatcher(configXml);
 
     const languageServer = new LanguageServer(
         context,
@@ -100,8 +127,12 @@ export async function activate(
 
     // restart the language server when changing workspaces
     const onWorkspacePathChange = async () => {
+        //kill the previous watcher
+        configWatcher.dispose();
+        configWatcher = vscode.workspace.createFileSystemWatcher(configXml);
         loggingService.logInfo(`Workspace changed: ${workspacePath}`);
         languageServer.setWorkspacePath(workspacePath);
+        languageServer.setPsalmConfigPath(configXml);
         languageServer.restart();
     };
 
@@ -146,23 +177,21 @@ export async function activate(
         await configurationService.init();
     });
 
-    vscode.window.onDidChangeActiveTextEditor((e) => {
+    vscode.window.onDidChangeActiveTextEditor(async (e) => {
         if (!e) {
             return;
         }
 
-        const tmpActiveWorkspace = vscode.workspace.getWorkspaceFolder(
-            e.document.uri
-        );
+        const options = await getOptions();
 
-        const tmpWorkspacePath = tmpActiveWorkspace
-            ? tmpActiveWorkspace.uri.fsPath
-            : workspaceFolders[0].uri.fsPath;
+        if (!options.workspacePath || workspacePath === options.workspacePath)
+            return;
 
-        if (!tmpWorkspacePath || workspacePath === tmpWorkspacePath) return;
-
-        activeWorkspace = tmpActiveWorkspace;
-        workspacePath = tmpWorkspacePath;
+        configPaths = options.configPaths;
+        configXml = options.configXml;
+        // psalmXMLFiles = options.psalmXMLFiles;
+        psalmXMLPaths = options.psalmXMLPaths;
+        workspacePath = options.workspacePath;
 
         onWorkspacePathChange();
     });
