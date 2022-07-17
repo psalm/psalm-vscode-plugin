@@ -20,7 +20,7 @@ export async function activate(
     const configurationService = new ConfigurationService();
     await configurationService.init();
 
-    //Set Logging Level
+    // Set Logging Level
     loggingService.setOutputLevel(
         configurationService.get<LogLevel>('logLevel')
     );
@@ -37,7 +37,17 @@ export async function activate(
         return;
     }
 
-    const workspacePath = workspaceFolders[0].uri.fsPath;
+    // const workspacePath = workspaceFolders[0].uri.fsPath;
+
+    let activeWorkspace = vscode.window.activeTextEditor
+        ? vscode.workspace.getWorkspaceFolder(
+              vscode.window.activeTextEditor.document.uri
+          )
+        : undefined;
+
+    let workspacePath = activeWorkspace
+        ? activeWorkspace.uri.fsPath
+        : workspaceFolders[0].uri.fsPath;
 
     const configPaths = configurationService.get<string[]>('configPaths') || [];
 
@@ -88,6 +98,16 @@ export async function activate(
         loggingService
     );
 
+    // restart the language server when changing workspaces
+    const onWorkspacePathChange = async () => {
+        loggingService.logInfo(`Workspace changed: ${workspacePath}`);
+        loggingService.logInfo(
+            `Creating a new language server for workspace: ${workspacePath}`
+        );
+        languageServer.setWorkspacePath(workspacePath);
+        languageServer.restart();
+    };
+
     const onConfigChange = () => {
         loggingService.logInfo(`Config file changed: ${configXml}`);
         languageServer.restart();
@@ -127,6 +147,22 @@ export async function activate(
         );
 
         await configurationService.init();
+    });
+
+    vscode.window.onDidChangeActiveTextEditor((e) => {
+        if (!vscode.window.activeTextEditor) {
+            return;
+        }
+
+        activeWorkspace = vscode.workspace.getWorkspaceFolder(
+            vscode.window.activeTextEditor.document.uri
+        );
+
+        workspacePath = activeWorkspace
+            ? activeWorkspace.uri.fsPath
+            : workspaceFolders[0].uri.fsPath;
+
+        onWorkspacePathChange();
     });
 
     loggingService.logDebug('Finished Extension Activation');
