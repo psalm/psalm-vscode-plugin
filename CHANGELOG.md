@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.7.0] - 2022-07-25
+
+### Changed
+
+-   Restart language server on project switching when using workspaces (#184) [@tncrazvan]
+-   Prevent focusing the output tab (#174) [@jarstelfox]
+
 ## [2.6.0] - 2022-02-01
 
 ### Added
