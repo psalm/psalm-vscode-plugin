@@ -95,6 +95,22 @@ export class LanguageServer {
         this.languageClient.onTelemetry(this.onTelemetry.bind(this));
     }
 
+    /**
+     * This will NOT restart the server.
+     * @param workspacePath
+     */
+    public setWorkspacePath(workspacePath: string): void {
+        this.workspacePath = workspacePath;
+    }
+
+    /**
+     * This will NOT restart the server.
+     * @param psalmConfigPath
+     */
+    public setPsalmConfigPath(psalmConfigPath: string): void {
+        this.psalmConfigPath = psalmConfigPath;
+    }
+
     public createDefaultErrorHandler(maxRestartCount?: number): ErrorHandler {
         if (maxRestartCount !== undefined && maxRestartCount < 0) {
             throw new Error(`Invalid maxRestartCount: ${maxRestartCount}`);

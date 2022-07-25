@@ -24,7 +24,7 @@ export default class LanguageServerErrorHandler implements ErrorHandler {
         if (this.restarts.length <= this.maxRestartCount) {
             return CloseAction.Restart;
         } else {
-            let diff =
+            const diff =
                 this.restarts[this.restarts.length - 1] - this.restarts[0];
             if (diff <= 3 * 60 * 1000) {
                 void showReportIssueErrorMessage(
