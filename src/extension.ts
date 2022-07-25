@@ -44,7 +44,7 @@ export async function activate(
             ? vscode.workspace.getWorkspaceFolder(
                   vscode.window.activeTextEditor.document.uri
               )
-            : undefined;
+            : workspaceFolders[0];
 
         const workspacePath = activeWorkspace
             ? activeWorkspace.uri.fsPath
