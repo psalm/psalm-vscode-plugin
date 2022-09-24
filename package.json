@@ -241,7 +241,7 @@
 	},
 	"devDependencies": {
 		"@types/node": "^14.18.3",
-		"@types/semver": "^7.3.10",
+		"@types/semver": "^7.3.12",
 		"@types/vscode": "^1.57.1",
 		"@types/which": "^2.0.1",
 		"husky": "^8.0.1",
