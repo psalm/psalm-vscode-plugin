@@ -260,6 +260,6 @@
 		"promisify-child-process": "^4.1.1",
 		"semver": "^7.3.8",
 		"vscode-languageclient": "^7.0.0",
-		"which": "^2.0.2"
+		"which": "^3.0.0"
 	}
 }
