@@ -29,6 +29,7 @@ export default class LanguageServerErrorHandler implements ErrorHandler {
             action: ErrorAction.Shutdown,
         };
     }
+
     public closed(): CloseHandlerResult {
         this.restarts.push(Date.now());
         if (this.restarts.length <= this.maxRestartCount) {
