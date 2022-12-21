@@ -6,7 +6,7 @@ import {
 } from 'vscode-languageclient/node';
 import { StatusBar, LanguageServerStatus } from './StatusBar';
 import { spawn, ChildProcess } from 'child_process';
-import { workspace, Uri, Disposable, ExtensionContext } from 'vscode';
+import { workspace, Uri, Disposable } from 'vscode';
 import { format, URL } from 'url';
 import { DocumentSelector } from 'vscode-languageserver-protocol';
 import { join, isAbsolute } from 'path';
@@ -33,17 +33,14 @@ export class LanguageServer {
     private initalizing = false;
     private disposable: Disposable;
     private serverProcess: ChildProcess | null = null;
-    private context: ExtensionContext;
 
     constructor(
-        context: ExtensionContext,
         workspacePath: string,
         psalmConfigPath: string,
         statusBar: StatusBar,
         configurationService: ConfigurationService,
         loggingService: LoggingService
     ) {
-        this.context = context;
         this.workspacePath = workspacePath;
         this.statusBar = statusBar;
         this.configurationService = configurationService;
@@ -85,12 +82,6 @@ export class LanguageServer {
             },
             this.debug
         );
-
-        this.languageClient.onReady().then(() => {
-            this.initalizing = false;
-            this.ready = true;
-            this.loggingService.logInfo('The Language Server is ready');
-        });
 
         this.languageClient.onTelemetry(this.onTelemetry.bind(this));
     }
@@ -209,9 +200,9 @@ export class LanguageServer {
     public async stop() {
         if (this.initalizing) {
             this.loggingService.logWarning(
-                'Server is in the process of intializing will stop when ready'
+                'Server is in the process of intializing'
             );
-            await this.languageClient.onReady();
+            return;
         }
         this.loggingService.logInfo('Stopping language server');
         await this.languageClient.stop();
@@ -229,8 +220,11 @@ export class LanguageServer {
         this.initalizing = true;
         this.statusBar.update(LanguageServerStatus.Initializing, 'starting');
         this.loggingService.logInfo('Starting language server');
-        this.disposable = this.languageClient.start();
-        this.context.subscriptions.push(this.disposable);
+        await this.languageClient.start();
+        //this.context.subscriptions.push(this.disposable);
+        this.initalizing = false;
+        this.ready = true;
+        this.loggingService.logInfo('The Language Server is ready');
     }
 
     public async restart() {

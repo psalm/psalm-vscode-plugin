@@ -2,7 +2,9 @@ import {
     Message,
     ErrorHandler,
     ErrorAction,
+    ErrorHandlerResult,
     CloseAction,
+    CloseHandlerResult,
 } from 'vscode-languageclient/node';
 import { showReportIssueErrorMessage } from './utils';
 
@@ -13,16 +15,24 @@ export default class LanguageServerErrorHandler implements ErrorHandler {
         this.restarts = [];
     }
 
-    public error(_error: Error, _message: Message, count: number): ErrorAction {
+    public error(
+        error: Error,
+        message: Message | undefined,
+        count: number | undefined
+    ): ErrorHandlerResult {
         if (count && count <= 3) {
-            return ErrorAction.Continue;
+            return {
+                action: ErrorAction.Continue,
+            };
         }
-        return ErrorAction.Shutdown;
+        return {
+            action: ErrorAction.Shutdown,
+        };
     }
-    public closed(): CloseAction {
+    public closed(): CloseHandlerResult {
         this.restarts.push(Date.now());
         if (this.restarts.length <= this.maxRestartCount) {
-            return CloseAction.Restart;
+            return { action: CloseAction.Restart };
         } else {
             const diff =
                 this.restarts[this.restarts.length - 1] - this.restarts[0];
@@ -32,10 +42,10 @@ export default class LanguageServerErrorHandler implements ErrorHandler {
                         this.maxRestartCount + 1
                     } times in the last 3 minutes. The server will not be restarted.`
                 );
-                return CloseAction.DoNotRestart;
+                return { action: CloseAction.DoNotRestart };
             } else {
                 this.restarts.shift();
-                return CloseAction.Restart;
+                return { action: CloseAction.Restart };
             }
         }
     }

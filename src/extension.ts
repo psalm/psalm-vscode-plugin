@@ -117,7 +117,6 @@ export async function activate(
     let configWatcher = vscode.workspace.createFileSystemWatcher(configXml);
 
     const languageServer = new LanguageServer(
-        context,
         workspacePath,
         configXml,
         statusBar,
@@ -197,4 +196,8 @@ export async function activate(
     });
 
     loggingService.logDebug('Finished Extension Activation');
+}
+
+export async function deactivate() {
+    //Extensions should now implement a deactivate function in their extension main file and correctly return the stop promise from the deactivate call.
 }
