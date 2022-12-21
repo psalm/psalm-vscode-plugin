@@ -37,12 +37,11 @@ export default class LanguageServerErrorHandler implements ErrorHandler {
             const diff =
                 this.restarts[this.restarts.length - 1] - this.restarts[0];
             if (diff <= 3 * 60 * 1000) {
-                void showReportIssueErrorMessage(
-                    `The ${this.name} server crashed ${
-                        this.maxRestartCount + 1
-                    } times in the last 3 minutes. The server will not be restarted.`
-                );
-                return { action: CloseAction.DoNotRestart };
+                const message = `The ${this.name} server crashed ${
+                    this.maxRestartCount + 1
+                } times in the last 3 minutes. The server will not be restarted.`;
+                showReportIssueErrorMessage(message);
+                return { action: CloseAction.DoNotRestart, message: message };
             } else {
                 this.restarts.shift();
                 return { action: CloseAction.Restart };
