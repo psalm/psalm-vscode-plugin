@@ -8,7 +8,6 @@ import { StatusBar, LanguageServerStatus } from './StatusBar';
 import { spawn, ChildProcess } from 'child_process';
 import { workspace, Uri, Disposable } from 'vscode';
 import { format, URL } from 'url';
-import { DocumentSelector } from 'vscode-languageserver-protocol';
 import { join, isAbsolute } from 'path';
 import { execFile } from 'promisify-child-process';
 import { ConfigurationService } from './ConfigurationService';
@@ -56,9 +55,9 @@ export class LanguageServer {
                 traceOutputChannel: this.loggingService,
                 revealOutputChannelOn: RevealOutputChannelOn.Never,
                 // Register the server for php (and maybe HTML) documents
-                documentSelector: this.configurationService.get<
-                    string[] | DocumentSelector
-                >('analyzedFileExtensions'),
+                documentSelector: this.configurationService.get(
+                    'analyzedFileExtensions'
+                ),
                 uriConverters: {
                     // VS Code by default %-encodes even the colon after the drive letter
                     // NodeJS handles it much better
@@ -77,7 +76,7 @@ export class LanguageServer {
                 },
                 progressOnInitialization: true,
                 errorHandler: this.createDefaultErrorHandler(
-                    this.configurationService.get<number>('maxRestartCount') - 1
+                    this.configurationService.get('maxRestartCount') - 1
                 ),
             },
             this.debug
@@ -119,10 +118,9 @@ export class LanguageServer {
             typeof params.message === 'string'
         ) {
             // each time we get a new telemetry, we are going to check the config, and update as needed
-            const hideStatusMessageWhenRunning =
-                this.configurationService.get<boolean>(
-                    'hideStatusMessageWhenRunning'
-                );
+            const hideStatusMessageWhenRunning = this.configurationService.get(
+                'hideStatusMessageWhenRunning'
+            );
 
             let status: string = params.message;
 
@@ -239,10 +237,9 @@ export class LanguageServer {
 
     private serverOptions(): Promise<ChildProcess | StreamInfo> {
         return new Promise<ChildProcess | StreamInfo>((resolve, reject) => {
-            const connectToServerWithTcp =
-                this.configurationService.get<boolean>(
-                    'connectToServerWithTcp'
-                );
+            const connectToServerWithTcp = this.configurationService.get(
+                'connectToServerWithTcp'
+            );
 
             // Use a TCP socket on Windows because of problems with blocking STDIO
             // stdio locks up for large responses
@@ -308,7 +305,7 @@ export class LanguageServer {
             await this.getPsalmLanguageServerVersion();
 
         const extraServerArgs =
-            this.configurationService.get<string[]>('psalmScriptArgs');
+            this.configurationService.get('psalmScriptArgs');
 
         if (extraServerArgs) {
             if (Array.isArray(extraServerArgs)) {
@@ -316,7 +313,7 @@ export class LanguageServer {
             }
         }
 
-        const unusedVariableDetection = this.configurationService.get<boolean>(
+        const unusedVariableDetection = this.configurationService.get(
             'unusedVariableDetection'
         );
 
@@ -324,14 +321,13 @@ export class LanguageServer {
             args.unshift('--find-dead-code');
         }
 
-        const enableVerbose =
-            this.configurationService.get<boolean>('enableVerbose');
+        const enableVerbose = this.configurationService.get('enableVerbose');
 
         if (enableVerbose) {
             args.unshift('--verbose');
         }
 
-        const disableAutoComplete = this.configurationService.get<boolean>(
+        const disableAutoComplete = this.configurationService.get(
             'disableAutoComplete'
         );
 
@@ -382,7 +378,7 @@ export class LanguageServer {
                 psalmScriptArgs.unshift('--verbose');
             }
 
-            const enableUseIniDefaults = this.configurationService.get<boolean>(
+            const enableUseIniDefaults = this.configurationService.get(
                 'enableUseIniDefaults'
             );
 
@@ -497,11 +493,13 @@ export class LanguageServer {
             throw new Error(msg);
         }
 
-        const psalmVersionOverride = this.configurationService.get<
-            string | null
-        >('psalmVersion');
+        const psalmVersionOverride =
+            this.configurationService.get('psalmVersion');
 
-        if (psalmVersionOverride !== null) {
+        if (
+            typeof psalmVersionOverride !== 'undefined' &&
+            psalmVersionOverride !== null
+        ) {
             this.loggingService.logWarning(
                 `Psalm Version was overridden to "${psalmVersionOverride}". If this is not intentional please clear the Psalm Version Setting`
             );
@@ -557,9 +555,9 @@ export class LanguageServer {
         args: string[]
     ): Promise<{ file: string; args: string[] }> {
         const phpExecutablePath =
-            this.configurationService.get<string>('phpExecutablePath');
+            this.configurationService.get('phpExecutablePath');
 
-        if (!phpExecutablePath.length) {
+        if (!phpExecutablePath || !phpExecutablePath.length) {
             const msg =
                 'Unable to find any php executable please set one in psalm.phpExecutablePath';
             await showOpenSettingsPrompt(`Psalm can not start: ${msg}`);
@@ -575,7 +573,7 @@ export class LanguageServer {
         }
 
         const phpExecutableArgs =
-            this.configurationService.get<string[]>('phpExecutableArgs');
+            this.configurationService.get('phpExecutableArgs');
 
         if (phpExecutableArgs) {
             if (
@@ -625,7 +623,7 @@ export class LanguageServer {
      */
     private async resolvePsalmScriptPath(): Promise<string> {
         const psalmScriptPath =
-            this.configurationService.get<string>('psalmScriptPath');
+            this.configurationService.get('psalmScriptPath');
 
         if (!psalmScriptPath) {
             await showErrorMessage(

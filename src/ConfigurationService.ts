@@ -1,77 +1,128 @@
 import { workspace, WorkspaceConfiguration } from 'vscode';
 import which from 'which';
 import { join } from 'path';
-import { DocumentSelector } from 'vscode-languageserver-protocol';
+import { DocumentSelector, integer } from 'vscode-languageserver-protocol';
 import { showOpenSettingsPrompt } from './utils';
+import { LogLevel } from './LoggingService';
+
+interface Config {
+    phpExecutablePath?: string;
+    phpExecutableArgs?: string[];
+    psalmVersion?: string;
+    psalmScriptPath?: string;
+    psalmScriptArgs?: string[];
+    disableAutoComplete: boolean;
+    maxRestartCount: integer;
+    unusedVariableDetection: boolean;
+    enableVerbose: boolean;
+    connectToServerWithTcp: boolean;
+    enableUseIniDefaults: boolean;
+    logLevel: LogLevel;
+    analyzedFileExtensions?: string[] | DocumentSelector;
+    configPaths?: string[];
+    hideStatusMessageWhenRunning: boolean;
+    psalmServerScriptPath?: string;
+}
 
 export class ConfigurationService {
-    private config: { [key: string]: any } = {};
+    private config: Config = {
+        maxRestartCount: 5,
+        disableAutoComplete: false,
+        unusedVariableDetection: false,
+        enableVerbose: false,
+        connectToServerWithTcp: false,
+        enableUseIniDefaults: false,
+        hideStatusMessageWhenRunning: false,
+        logLevel: 'INFO',
+    };
 
     public constructor() {}
 
     public async init() {
         const workspaceConfiguration: WorkspaceConfiguration =
             workspace.getConfiguration('psalm');
+
+        //Work around until types are updated
+        let whichPHP: Config['phpExecutablePath'] = undefined;
+        try {
+            whichPHP = await which('php');
+        } catch (err) {}
+
         // PHP Executable Path or default to which
-        this.config.phpExecutablePath =
-            workspaceConfiguration.get<string>('phpExecutablePath') ||
-            (await which('php'));
+        this.config.phpExecutablePath = workspaceConfiguration.get(
+            'phpExecutablePath',
+            whichPHP
+        );
 
         // The Executable Arguments
-        this.config.phpExecutableArgs = workspaceConfiguration.get<string[]>(
-            'phpExecutableArgs'
-        ) || [
-            '-dxdebug.remote_autostart=0',
-            '-dxdebug.remote_enable=0',
-            '-dxdebug_profiler_enable=0',
-        ];
+        this.config.phpExecutableArgs = workspaceConfiguration.get(
+            'phpExecutableArgs',
+            [
+                '-dxdebug.remote_autostart=0',
+                '-dxdebug.remote_enable=0',
+                '-dxdebug_profiler_enable=0',
+            ]
+        );
 
         this.config.psalmVersion =
-            workspaceConfiguration.get<string>('psalmVersion') || null;
+            workspaceConfiguration.get<string>('psalmVersion');
 
-        this.config.psalmScriptPath =
-            workspaceConfiguration.get<string>('psalmScriptPath') ||
-            join('vendor', 'vimeo', 'psalm', 'psalm-language-server');
+        this.config.psalmScriptPath = workspaceConfiguration.get(
+            'psalmScriptPath',
+            join('vendor', 'vimeo', 'psalm', 'psalm-language-server')
+        );
 
-        this.config.psalmScriptArgs =
-            workspaceConfiguration.get<string[]>('psalmScriptArgs') || [];
+        this.config.psalmScriptArgs = workspaceConfiguration.get(
+            'psalmScriptArgs',
+            []
+        );
 
-        this.config.disableAutoComplete =
-            workspaceConfiguration.get<boolean>('disableAutoComplete') || false;
+        this.config.disableAutoComplete = workspaceConfiguration.get(
+            'disableAutoComplete',
+            false
+        );
 
-        this.config.maxRestartCount =
-            workspaceConfiguration.get<number>('maxRestartCount') || 5;
+        this.config.maxRestartCount = workspaceConfiguration.get(
+            'maxRestartCount',
+            5
+        );
 
-        this.config.unusedVariableDetection =
-            workspaceConfiguration.get<boolean>('unusedVariableDetection') ||
-            false;
+        this.config.unusedVariableDetection = workspaceConfiguration.get(
+            'unusedVariableDetection',
+            false
+        );
 
-        this.config.enableVerbose =
-            workspaceConfiguration.get<boolean>('enableVerbose') || false;
+        this.config.enableVerbose = workspaceConfiguration.get(
+            'enableVerbose',
+            false
+        );
 
-        this.config.connectToServerWithTcp =
-            workspaceConfiguration.get<boolean>('connectToServerWithTcp') ||
-            false;
+        this.config.connectToServerWithTcp = workspaceConfiguration.get(
+            'connectToServerWithTcp',
+            false
+        );
 
-        this.config.enableUseIniDefaults =
-            workspaceConfiguration.get<boolean>('enableUseIniDefaults') ||
-            false;
+        this.config.enableUseIniDefaults = workspaceConfiguration.get(
+            'enableUseIniDefaults',
+            false
+        );
 
-        this.config.logLevel =
-            workspaceConfiguration.get<string>('logLevel') || 'INFO';
+        this.config.logLevel = workspaceConfiguration.get('logLevel', 'INFO');
 
-        this.config.analyzedFileExtensions = workspaceConfiguration.get<
-            string[] | DocumentSelector
-        >('analyzedFileExtensions') || [{ scheme: 'file', language: 'php' }];
+        this.config.analyzedFileExtensions = workspaceConfiguration.get(
+            'analyzedFileExtensions',
+            [{ scheme: 'file', language: 'php' }]
+        );
 
-        this.config.configPaths = workspaceConfiguration.get<string[]>(
-            'configPaths'
-        ) || ['psalm.xml', 'psalm.xml.dist'];
+        this.config.configPaths = workspaceConfiguration.get('configPaths', [
+            'psalm.xml',
+            'psalm.xml.dist',
+        ]);
 
-        this.config.hideStatusMessageWhenRunning =
-            workspaceConfiguration.get<boolean>(
-                'hideStatusMessageWhenRunning'
-            ) || false;
+        this.config.hideStatusMessageWhenRunning = workspaceConfiguration.get(
+            'hideStatusMessageWhenRunning',
+            false
+        );
     }
 
     public async validate(): Promise<boolean> {
@@ -85,14 +136,14 @@ export class ConfigurationService {
         return true;
     }
 
-    public get<T>(key: string): T {
+    public get<S extends keyof Config>(key: S): Config[S] {
         if (!(key in this.config)) {
             throw new Error(`Key ${key} not found in configuration`);
         }
         return this.config[key];
     }
 
-    public getAll(): { [key: string]: any } {
+    public getAll(): Config {
         return this.config;
     }
 }

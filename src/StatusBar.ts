@@ -1,4 +1,4 @@
-import { StatusBarAlignment, StatusBarItem, window } from 'vscode';
+import { StatusBarAlignment, StatusBarItem, ThemeColor, window } from 'vscode';
 
 export enum LanguageServerStatus {
     Initializing = 'sync~spin',
@@ -31,16 +31,13 @@ export class StatusBar {
      */
     public update(result: LanguageServerStatus, text: string): void {
         this.statusBarItem.text = `$(${result.toString()}) Psalm: ${text}`;
-        // Waiting for VS Code 1.53: https://github.com/microsoft/vscode/pull/116181
-        // if (result === FormattingResult.Error) {
-        //   this.statusBarItem.backgroundColor = new ThemeColor(
-        //     "statusBarItem.errorBackground"
-        //   );
-        // } else {
-        //   this.statusBarItem.backgroundColor = new ThemeColor(
-        //     "statusBarItem.fourgroundBackground"
-        //   );
-        // }
+        if (result === LanguageServerStatus.Exited) {
+            this.statusBarItem.backgroundColor = new ThemeColor(
+                'statusBarItem.errorBackground'
+            );
+        } else {
+            this.statusBarItem.backgroundColor = undefined;
+        }
         this.show();
     }
 

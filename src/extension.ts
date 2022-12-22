@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { StatusBar } from './StatusBar';
-import { LoggingService, LogLevel } from './LoggingService';
+import { LoggingService } from './LoggingService';
 import { ConfigurationService } from './ConfigurationService';
 import { LanguageServer } from './LanguageServer';
 import { registerCommands } from './commands';
@@ -21,9 +21,7 @@ export async function activate(
     await configurationService.init();
 
     // Set Logging Level
-    loggingService.setOutputLevel(
-        configurationService.get<LogLevel>('logLevel')
-    );
+    loggingService.setOutputLevel(configurationService.get('logLevel'));
 
     // @ts-ignore
     const statusBar = new StatusBar();
@@ -54,8 +52,7 @@ export async function activate(
     };
 
     const getOptions = async () => {
-        const configPaths =
-            configurationService.get<string[]>('configPaths') || [];
+        const configPaths = configurationService.get('configPaths') || [];
 
         const psalmXMLFiles = await vscode.workspace.findFiles(
             `{${configPaths.join(',')}}`

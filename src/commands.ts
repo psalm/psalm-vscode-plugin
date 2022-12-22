@@ -20,7 +20,7 @@ async function restartSever(
     const languageServerVersion = await client.getPsalmLanguageServerVersion();
     if (languageServerVersion === null) {
         const reload = await vscode.window.showWarningMessage(
-            `This version of Psalm has a bug in that the only way to force the Language Server to re-analyze the workspace is to forcefully crash it. VSCode limitations only allow us to do this ${configurationService.get<number>(
+            `This version of Psalm has a bug in that the only way to force the Language Server to re-analyze the workspace is to forcefully crash it. VSCode limitations only allow us to do this ${configurationService.get(
                 'maxRestartCount'
             )} times per session. Consider upgrading to at least 4.9.0 of Psalm`,
             'Ok',
@@ -73,9 +73,7 @@ function reportIssue(
                 'report_issue_template.md'
             );
 
-            const userSettings = Object.entries(
-                configurationService.getAll()
-            )
+            const userSettings = Object.entries(configurationService.getAll())
                 .map(([key, value]) => `${key}: ${JSON.stringify(value)}`)
                 .join(EOL);
             const psalmLogs = loggingService.getContent().join(EOL);
@@ -90,8 +88,7 @@ function reportIssue(
             let psalmVersion: string | null = 'unknown';
             try {
                 psalmVersion =
-                    (await client.getPsalmLanguageServerVersion()) ??
-                    'unknown';
+                    (await client.getPsalmLanguageServerVersion()) ?? 'unknown';
             } catch (err) {
                 psalmVersion = err.message;
             }
