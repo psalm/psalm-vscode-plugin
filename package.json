@@ -244,7 +244,7 @@
 		"@types/semver": "^7.3.13",
 		"@types/vscode": "^1.57.1",
 		"@types/which": "^2.0.1",
-		"husky": "^8.0.2",
+		"husky": "^8.0.3",
 		"prettier": "^2.8.1",
 		"ts-loader": "^9.4.2",
 		"tslint": "^6.1.3",
