@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changes
+-  Support v4.9.1 of code-server which supports Code v1.73.1
+
 ## [2.7.0] - 2022-07-25
 
 ### Changed
