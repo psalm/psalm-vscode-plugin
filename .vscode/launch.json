@@ -8,10 +8,14 @@
             "request": "launch",
             "preLaunchTask": "${defaultBuildTask}",
             "runtimeExecutable": "${execPath}",
-            "args": ["--extensionDevelopmentPath=${workspaceRoot}"],
-            "stopOnEntry": false,
+            "args": [
+                "--extensionDevelopmentPath=${workspaceRoot}",
+                "--disable-extensions"
+            ],
             "sourceMaps": true,
-            "outFiles": ["${workspaceRoot}/out"]
+            "outFiles": [
+                "${workspaceRoot}/out/**/*.js"
+            ]
         }
     ]
 }

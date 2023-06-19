@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changes
 
 -   Support v4.13.0 of code-server which supports Code v1.78.2
+-   Cleanup old dependencies and remove need for webpack
 
 ## [2.7.0] - 2022-07-25
 
