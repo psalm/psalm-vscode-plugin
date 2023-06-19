@@ -32,9 +32,4 @@ Install through VS Code extensions. Search for `Psalm (PHP Static Analysis Linti
 
 ## Contributing
 
-You can build and test locally in Visual Studio this locally using `npm`:
-
-```
-npm install
-npm run build
-```
+You can build and test locally in Visual Studio by going to "Run and Debug" and clicking "Launch Extension"

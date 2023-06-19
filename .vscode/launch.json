@@ -1,21 +1,34 @@
+// A launch configuration that compiles the extension and then opens it inside a new window
+// Use IntelliSense to learn about possible attributes.
+// Hover to view descriptions of existing attributes.
+// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
 {
     "version": "0.2.0",
-    // List of configurations. Add new configurations or edit existing ones.
     "configurations": [
         {
-            "name": "Launch Extension",
+            "name": "Run Extension",
             "type": "extensionHost",
             "request": "launch",
-            "preLaunchTask": "${defaultBuildTask}",
-            "runtimeExecutable": "${execPath}",
             "args": [
-                "--extensionDevelopmentPath=${workspaceRoot}",
+                "--extensionDevelopmentPath=${workspaceFolder}",
                 "--disable-extensions"
             ],
-            "sourceMaps": true,
+            "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+            "preLaunchTask": "${defaultBuildTask}"
+        },
+        {
+            "name": "Extension Tests",
+            "type": "extensionHost",
+            "request": "launch",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--extensionTestsPath=${workspaceFolder}/out/test/suite/index"
+            ],
             "outFiles": [
-                "${workspaceRoot}/out/**/*.js"
-            ]
+                "${workspaceFolder}/out/**/*.js",
+                "${workspaceFolder}/dist/**/*.js"
+            ],
+            "preLaunchTask": "tasks: watch-tests"
         }
     ]
 }

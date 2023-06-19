@@ -1,6 +1,7 @@
-.vscode/**
+.vscode
+.github
 **/*.ts
 **/*.map
 src/**
 .gitignore
-node_modules/**
+out
