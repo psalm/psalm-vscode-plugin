@@ -42,8 +42,8 @@ export class ConfigurationService {
         const workspaceConfiguration: WorkspaceConfiguration =
             workspace.getConfiguration('psalm');
 
-        //Work around until types are updated
-        let whichPHP: Config['phpExecutablePath'] = undefined;
+        // Work around until types are updated
+        let whichPHP: Config['phpExecutablePath'];
         try {
             whichPHP = await which('php');
         } catch (err) {}

@@ -3,14 +3,21 @@
     "typescript.tsdk": "node_modules\\typescript\\lib",
     // Set the default
     "editor.formatOnSave": true,
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+    "prettier.prettierPath": "node_modules/prettier",
     // Enable per-language
     "[javascript]": {
-        "editor.formatOnSave": true
+        "editor.formatOnSave": false,
+        "editor.defaultFormatter": "dbaeumer.vscode-eslint"
     },
     "[typescript]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode"
+        "editor.formatOnSave": false,
+        "editor.defaultFormatter": "dbaeumer.vscode-eslint"
     },
-    "prettier.prettierPath": "node_modules/prettier",
+    "eslint.format.enable": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": true
+    },
     "psalmLanguageServer.trace.server": "message",
     "files.exclude": {
         "out": false, // set this to true to hide the "out" folder with the compiled JS files

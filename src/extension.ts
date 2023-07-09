@@ -36,48 +36,50 @@ export async function activate(
     }
 
     const getCurrentWorkspace = (
-        workspaceFolders: readonly vscode.WorkspaceFolder[]
+        workspaceFolders1: readonly vscode.WorkspaceFolder[]
     ) => {
-        const activeWorkspace = vscode.window.activeTextEditor
-            ? vscode.workspace.getWorkspaceFolder(
-                  vscode.window.activeTextEditor.document.uri
-              )
-            : workspaceFolders[0];
+        const { uri } = vscode.window.activeTextEditor?.document ?? {
+            uri: undefined,
+        };
+        const activeWorkspace = uri
+            ? vscode.workspace.getWorkspaceFolder(uri)
+            : workspaceFolders1[0];
 
-        const workspacePath = activeWorkspace
+        const workspacePath1 = activeWorkspace
             ? activeWorkspace.uri.fsPath
-            : workspaceFolders[0].uri.fsPath;
+            : workspaceFolders1[0].uri.fsPath;
 
-        return { workspacePath };
+        return { workspacePath: workspacePath1 };
     };
 
     const getOptions = async () => {
-        const configPaths = configurationService.get('configPaths') || [];
+        const configPaths1 = configurationService.get('configPaths') || [];
 
         const psalmXMLFiles = await vscode.workspace.findFiles(
-            `{${configPaths.join(',')}}`
+            `{${configPaths1.join(',')}}`
             // `**/vendor/**/{${configPaths.join(',')}}`
         );
 
-        const psalmXMLPaths = psalmXMLFiles.map((uri) => {
+        const psalmXMLPaths1 = psalmXMLFiles.map((uri) => {
             if (process.platform === 'win32') {
                 return uri.path.replace(/\//g, '\\').replace(/^\\/g, '');
             }
             return uri.path;
         });
 
-        const { workspacePath } = getCurrentWorkspace(workspaceFolders);
+        const { workspacePath: workspacePath1 } =
+            getCurrentWorkspace(workspaceFolders);
 
-        const configXml =
-            psalmXMLPaths.find((path) => path.startsWith(workspacePath)) ??
-            psalmXMLPaths[0];
+        const configXml1 =
+            psalmXMLPaths1.find((path) => path.startsWith(workspacePath1)) ??
+            psalmXMLPaths1[0];
 
         return {
-            configPaths,
+            configPaths: configPaths1,
             psalmXMLFiles,
-            psalmXMLPaths,
-            configXml,
-            workspacePath,
+            psalmXMLPaths: psalmXMLPaths1,
+            configXml: configXml1,
+            workspacePath: workspacePath1,
         };
     };
 
@@ -105,7 +107,7 @@ export async function activate(
     }
 
     loggingService.logDebug(
-        `Found the following Psalm XML Configs:`,
+        'Found the following Psalm XML Configs:',
         psalmXMLPaths
     );
 
@@ -123,7 +125,7 @@ export async function activate(
 
     // restart the language server when changing workspaces
     const onWorkspacePathChange = async () => {
-        //kill the previous watcher
+        // kill the previous watcher
         configWatcher.dispose();
         configWatcher = vscode.workspace.createFileSystemWatcher(configXml);
         loggingService.logInfo(`Workspace changed: ${workspacePath}`);
@@ -180,8 +182,9 @@ export async function activate(
 
         const options = await getOptions();
 
-        if (!options.workspacePath || workspacePath === options.workspacePath)
+        if (!options.workspacePath || workspacePath === options.workspacePath) {
             return;
+        }
 
         configPaths = options.configPaths;
         configXml = options.configXml;
@@ -196,5 +199,7 @@ export async function activate(
 }
 
 export async function deactivate() {
-    //Extensions should now implement a deactivate function in their extension main file and correctly return the stop promise from the deactivate call.
+    // Extensions should now implement a deactivate function in
+    // their extension main file and correctly return the stop
+    // promise from the deactivate call.
 }

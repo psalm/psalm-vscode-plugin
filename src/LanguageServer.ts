@@ -111,6 +111,128 @@ export class LanguageServer {
         );
     }
 
+    public getServerProcess(): ChildProcess | null {
+        return this.serverProcess;
+    }
+
+    public isReady(): boolean {
+        return this.ready;
+    }
+
+    public isInitalizing(): boolean {
+        return this.initalizing;
+    }
+
+    public getDisposable(): Disposable {
+        return this.disposable;
+    }
+
+    public getClient(): LanguageClient {
+        return this.languageClient;
+    }
+
+    public async stop() {
+        if (this.initalizing) {
+            this.loggingService.logWarning(
+                'Server is in the process of intializing'
+            );
+            return;
+        }
+        this.loggingService.logInfo('Stopping language server');
+        await this.languageClient.stop();
+    }
+
+    public async start() {
+        // Check if psalm is installed and supports the language server protocol.
+        const isValidPsalmVersion: boolean =
+            await this.checkPsalmHasLanguageServer();
+        if (!isValidPsalmVersion) {
+            showOpenSettingsPrompt('Psalm is not installed');
+            return;
+        }
+
+        this.initalizing = true;
+        this.statusBar.update(LanguageServerStatus.Initializing, 'starting');
+        this.loggingService.logInfo('Starting language server');
+        await this.languageClient.start();
+        // this.context.subscriptions.push(this.disposable);
+        this.initalizing = false;
+        this.ready = true;
+        this.loggingService.logInfo('The Language Server is ready');
+    }
+
+    public async restart() {
+        this.loggingService.logInfo('Restarting language server');
+        await this.stop();
+        await this.start();
+    }
+
+    public getLanguageClient(): LanguageClient {
+        return this.languageClient;
+    }
+
+    /**
+     * Get the PHP version
+     * @return Promise<string> A promise that resolves to the php version (Or null)
+     */
+    public async getPHPVersion(): Promise<string | null> {
+        const out = await this.executePhp(['--version']);
+        return out;
+    }
+
+    /**
+     * Get the Psalm Language Server version
+     * @return Promise<string> A promise that resolves to the language server version (Or null)
+     */
+    public async getPsalmLanguageServerVersion(): Promise<string | null> {
+        const psalmScriptPath = await this.resolvePsalmScriptPath();
+
+        try {
+            await access(psalmScriptPath, constants.F_OK);
+        } catch {
+            const msg = `${psalmScriptPath} does not exist. Please set a valid path to psalm.psalmScriptPath`;
+            await showErrorMessage(`Psalm can not start: ${msg}`);
+            throw new Error(msg);
+        }
+
+        const psalmVersionOverride =
+            this.configurationService.get('psalmVersion');
+
+        if (
+            typeof psalmVersionOverride !== 'undefined' &&
+            psalmVersionOverride !== null
+        ) {
+            this.loggingService.logWarning(
+                `Psalm Version was overridden to "${psalmVersionOverride}".` +
+                    ' If this is not intentional please clear the Psalm Version Setting'
+            );
+            return psalmVersionOverride;
+        }
+
+        try {
+            const args: string[] = ['-f', psalmScriptPath, '--', '--version'];
+            const out = await this.executePhp(args);
+            // Psalm 4.8.1@f73f2299dbc59a3e6c4d66cff4605176e728ee69
+            const ret = out.match(/^Psalm\s*((?:[0-9]+\.?)+)@([0-9a-f]{40})/);
+            if (ret === null || ret.length !== 3) {
+                this.loggingService.logWarning(
+                    `Psalm Version could not be parsed as a Semantic Version. Got "${out}". Assuming unknown`
+                );
+                return null;
+            }
+            const [, version] = ret;
+            this.loggingService.logInfo(
+                `Psalm Version was detected as ${version}`
+            );
+            return version;
+        } catch (err) {
+            this.loggingService.logWarning(
+                `Psalm Version could not be detected. Got "${err.message}". Assuming unknown`
+            );
+            return null;
+        }
+    }
+
     private onTelemetry(params: any) {
         if (
             typeof params === 'object' &&
@@ -173,66 +295,6 @@ export class LanguageServer {
                 this.statusBar.show();
             }
         }
-    }
-
-    public getServerProcess(): ChildProcess | null {
-        return this.serverProcess;
-    }
-
-    public isReady(): boolean {
-        return this.ready;
-    }
-
-    public isInitalizing(): boolean {
-        return this.initalizing;
-    }
-
-    public getDisposable(): Disposable {
-        return this.disposable;
-    }
-
-    public getClient(): LanguageClient {
-        return this.languageClient;
-    }
-
-    public async stop() {
-        if (this.initalizing) {
-            this.loggingService.logWarning(
-                'Server is in the process of intializing'
-            );
-            return;
-        }
-        this.loggingService.logInfo('Stopping language server');
-        await this.languageClient.stop();
-    }
-
-    public async start() {
-        // Check if psalm is installed and supports the language server protocol.
-        const isValidPsalmVersion: boolean =
-            await this.checkPsalmHasLanguageServer();
-        if (!isValidPsalmVersion) {
-            showOpenSettingsPrompt('Psalm is not installed');
-            return;
-        }
-
-        this.initalizing = true;
-        this.statusBar.update(LanguageServerStatus.Initializing, 'starting');
-        this.loggingService.logInfo('Starting language server');
-        await this.languageClient.start();
-        //this.context.subscriptions.push(this.disposable);
-        this.initalizing = false;
-        this.ready = true;
-        this.loggingService.logInfo('The Language Server is ready');
-    }
-
-    public async restart() {
-        this.loggingService.logInfo('Restarting language server');
-        await this.stop();
-        await this.start();
-    }
-
-    public getLanguageClient(): LanguageClient {
-        return this.languageClient;
     }
 
     private serverOptions(): Promise<ChildProcess | StreamInfo> {
@@ -470,67 +532,6 @@ export class LanguageServer {
     }
 
     /**
-     * Get the PHP version
-     * @return Promise<string> A promise that resolves to the php version (Or null)
-     */
-    public async getPHPVersion(): Promise<string | null> {
-        const out = await this.executePhp(['--version']);
-        return out;
-    }
-
-    /**
-     * Get the Psalm Language Server version
-     * @return Promise<string> A promise that resolves to the language server version (Or null)
-     */
-    public async getPsalmLanguageServerVersion(): Promise<string | null> {
-        const psalmScriptPath = await this.resolvePsalmScriptPath();
-
-        try {
-            await access(psalmScriptPath, constants.F_OK);
-        } catch {
-            const msg = `${psalmScriptPath} does not exist. Please set a valid path to psalm.psalmScriptPath`;
-            await showErrorMessage(`Psalm can not start: ${msg}`);
-            throw new Error(msg);
-        }
-
-        const psalmVersionOverride =
-            this.configurationService.get('psalmVersion');
-
-        if (
-            typeof psalmVersionOverride !== 'undefined' &&
-            psalmVersionOverride !== null
-        ) {
-            this.loggingService.logWarning(
-                `Psalm Version was overridden to "${psalmVersionOverride}". If this is not intentional please clear the Psalm Version Setting`
-            );
-            return psalmVersionOverride;
-        }
-
-        try {
-            const args: string[] = ['-f', psalmScriptPath, '--', '--version'];
-            const out = await this.executePhp(args);
-            // Psalm 4.8.1@f73f2299dbc59a3e6c4d66cff4605176e728ee69
-            const ret = out.match(/^Psalm\s*((?:[0-9]+\.?)+)@([0-9a-f]{40})/);
-            if (ret === null || ret.length !== 3) {
-                this.loggingService.logWarning(
-                    `Psalm Version could not be parsed as a Semantic Version. Got "${out}". Assuming unknown`
-                );
-                return null;
-            }
-            const [, version] = ret;
-            this.loggingService.logInfo(
-                `Psalm Version was detected as ${version}`
-            );
-            return version;
-        } catch (err) {
-            this.loggingService.logWarning(
-                `Psalm Version could not be detected. Got "${err.message}". Assuming unknown`
-            );
-            return null;
-        }
-    }
-
-    /**
      * Executes PHP with Arguments
      * @param args The arguments to pass to PHP
      * @return Promise<string> A promise that resolves to the stdout of PHP
@@ -540,6 +541,7 @@ export class LanguageServer {
 
         const { file, args: fileArgs } = await this.getPhpArgs(args);
 
+        // eslint-disable-next-line prefer-const
         ({ stdout } = await execFile(file, fileArgs, {
             cwd: this.workspacePath,
         }));
@@ -627,7 +629,7 @@ export class LanguageServer {
 
         if (!psalmScriptPath) {
             await showErrorMessage(
-                `Unable to find Psalm Language Server. Please set psalm.psalmScriptPath`
+                'Unable to find Psalm Language Server. Please set psalm.psalmScriptPath'
             );
             throw new Error('psalmScriptPath is not set');
         }

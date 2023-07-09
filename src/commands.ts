@@ -20,9 +20,11 @@ async function restartSever(
     const languageServerVersion = await client.getPsalmLanguageServerVersion();
     if (languageServerVersion === null) {
         const reload = await vscode.window.showWarningMessage(
-            `This version of Psalm has a bug in that the only way to force the Language Server to re-analyze the workspace is to forcefully crash it. VSCode limitations only allow us to do this ${configurationService.get(
-                'maxRestartCount'
-            )} times per session. Consider upgrading to at least 4.9.0 of Psalm`,
+            'This version of Psalm has a bug in that the only way' +
+                'to force the Language Server to re-analyze the workspace' +
+                `is to forcefully crash it. VSCode limitations only allow us to do this ${configurationService.get(
+                    'maxRestartCount'
+                )} times per session. Consider upgrading to at least 4.9.0 of Psalm`,
             'Ok',
             'Cancel'
         );
@@ -131,9 +133,9 @@ export function registerCommands(
         showOutput(loggingService),
     ];
 
-    const disposables = commands.map((command) => {
-        return vscode.commands.registerCommand(command.id, command.execute);
-    });
+    const disposables = commands.map((command) =>
+        vscode.commands.registerCommand(command.id, command.execute)
+    );
 
     return disposables;
 }

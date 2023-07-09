@@ -13,6 +13,7 @@ jobs:
         with:
           node-version: 18
       - run: npm install
+      - run: npm run lint
       - name: Publish to Open VSX Registry
         uses: HaaLeo/publish-vscode-extension@v1
         with:

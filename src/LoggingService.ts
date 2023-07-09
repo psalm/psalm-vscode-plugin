@@ -2,6 +2,8 @@ import { window, OutputChannel } from 'vscode';
 
 export type LogLevel = 'TRACE' | 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'NONE';
 export class LoggingService implements OutputChannel {
+    readonly name: string = 'Psalm Language Server';
+
     private outputChannel = window.createOutputChannel('Psalm Language Server');
 
     private logLevel: LogLevel = 'DEBUG';
@@ -9,8 +11,6 @@ export class LoggingService implements OutputChannel {
     private content: string[] = [];
 
     private contentLimit = 1000;
-
-    readonly name: string = 'Psalm Language Server';
 
     /**
      * Replaces all output from the channel with the given value.
