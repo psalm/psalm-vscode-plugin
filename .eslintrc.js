@@ -11,7 +11,6 @@ module.exports = {
     "plugins": [
         "eslint-plugin-import",
         "eslint-plugin-jsdoc",
-        "@angular-eslint/eslint-plugin",
         "@typescript-eslint",
         "prettier"
     ],
@@ -28,12 +27,6 @@ module.exports = {
 				endOfLine: 'auto'
 			},
 		],
-        "@angular-eslint/component-class-suffix": "error",
-        "@angular-eslint/directive-class-suffix": "error",
-        "@angular-eslint/no-input-rename": "error",
-        "@angular-eslint/no-output-on-prefix": "error",
-        "@angular-eslint/no-output-rename": "error",
-        "@angular-eslint/use-pipe-transform-interface": "error",
         "@typescript-eslint/consistent-type-definitions": "error",
         "@typescript-eslint/dot-notation": "off",
         "@typescript-eslint/explicit-member-accessibility": [
