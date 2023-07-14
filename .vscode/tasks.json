@@ -30,7 +30,16 @@
         },
         {
             "label": "tasks: watch-tests",
-            "dependsOn": ["npm: watch", "npm: watch-tests"],
+            "dependsOn": [
+                "npm: watch",
+                "npm: watch-tests"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "copy .devcontainer from vscode",
+            "type": "shell",
+            "command": "bash ${workspaceFolder}/.vscode/syncDevcontainer.sh ${workspaceFolder}",
             "problemMatcher": []
         }
     ]
