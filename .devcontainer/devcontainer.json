@@ -2,5 +2,12 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
 {
 	"name": "Node.js & TypeScript",
-	"image": "mcr.microsoft.com/devcontainers/typescript-node:1-16-bullseye"
+	"image": "mcr.microsoft.com/devcontainers/typescript-node:1-16-bullseye",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"amodio.tsl-problem-matcher"
+			]
+		}
+	}
 }
