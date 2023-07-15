@@ -35,6 +35,13 @@
                 "npm: watch-tests"
             ],
             "problemMatcher": []
+        },
+        {
+            "label": "run in vscode tunnel",
+            "command":"bash ${workspaceFolder}/.vscode/runInTunnel.sh ${workspaceFolder}",
+            "type": "shell",
+            "isBackground": true,
+            "problemMatcher": []
         }
     ]
 }
