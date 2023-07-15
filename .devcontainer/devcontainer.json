@@ -1,22 +1,36 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
 {
-	"name": "Code - OSS with X11/Wayland",
-	"build": {
-		"dockerfile": "Dockerfile"
-	},
-	"overrideCommand": false,
-	"privileged": true,
-	"mounts": [
-		{
-			"source": "vscode-dev",
-			"target": "/vscode-dev",
-			"type": "volume"
+	"name": "Node.js & TypeScript",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"image": "mcr.microsoft.com/devcontainers/typescript-node:1-16-bullseye",
+	"features": {
+		"ghcr.io/devcontainers/features/desktop-lite:1": {
+			"version": "latest",
+			"noVncVersion": "1.2.0",
+			"password": "vscode",
+			"webPort": "6080",
+			"vncPort": "5901"
 		}
-	],
-	"customizations": {
-		"vscode": {
-			"extensions": [
-				"mutantdino.resourcemonitor"
-			]
+	},
+
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	// "features": {},
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	"forwardPorts": [6080],
+	"portsAttributes": {
+		"6080": {
+		"label": "desktop"
 		}
 	}
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	// "postCreateCommand": "yarn install",
+
+	// Configure tool-specific properties.
+	// "customizations": {},
+
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
 }
