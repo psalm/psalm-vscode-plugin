@@ -44,7 +44,7 @@
             "hide": true
         },
         {
-            "label": "run in vscode tunnel",
+            "label": "run vscode tunnel",
             "command": "/tmp/code tunnel --name 'psalm-vscode-plugin' --accept-server-license-terms",
             "type": "shell",
             "isBackground": true,
@@ -52,15 +52,6 @@
             "dependsOn": [
                 "get vscode cli"
             ]
-        },
-        {
-            "label": "install here",
-            "command": "npm --prefix ${workspaceFolder} install;outfile=$(npm --prefix ${workspaceFolder} run vsce:package | grep -o ${workspaceFolder}/psalm-vscode-plugin-*.vsix);/tmp/code --install-extension $outfile",
-            "type": "shell",
-            "dependsOn": [
-                "get vscode cli"
-            ],
-            "problemMatcher": []
         }
     ]
 }
