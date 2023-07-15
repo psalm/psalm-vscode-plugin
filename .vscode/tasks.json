@@ -35,23 +35,6 @@
                 "npm: watch-tests"
             ],
             "problemMatcher": []
-        },
-        {
-            "label": "get vscode cli",
-            "command": "if [ ! -f '/tmp/code' ]; then wget -O /tmp/code.tar.gz 'https://code.visualstudio.com/sha/download?build=stable&os=cli-alpine-x64' && tar -xf /tmp/code.tar.gz -C /tmp; fi",
-            "type": "shell",
-            "problemMatcher": [],
-            "hide": true
-        },
-        {
-            "label": "run vscode tunnel",
-            "command": "/tmp/code tunnel --name 'psalm-vscode-plugin' --accept-server-license-terms",
-            "type": "shell",
-            "isBackground": true,
-            "problemMatcher": [],
-            "dependsOn": [
-                "get vscode cli"
-            ]
         }
     ]
 }
