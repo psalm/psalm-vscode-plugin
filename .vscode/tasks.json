@@ -37,10 +37,29 @@
             "problemMatcher": []
         },
         {
+            "label": "get vscode cli",
+            "command": "if [ ! -f '/tmp/code' ]; then wget -O /tmp/code.tar.gz 'https://code.visualstudio.com/sha/download?build=stable&os=cli-alpine-x64' && tar -xf /tmp/code.tar.gz -C /tmp; fi",
+            "type": "shell",
+            "problemMatcher": [],
+            "hide": true
+        },
+        {
             "label": "run in vscode tunnel",
-            "command":"bash ${workspaceFolder}/.vscode/runInTunnel.sh ${workspaceFolder}",
+            "command": "/tmp/code tunnel --name 'psalm-vscode-plugin' --accept-server-license-terms",
             "type": "shell",
             "isBackground": true,
+            "problemMatcher": [],
+            "dependsOn": [
+                "get vscode cli"
+            ]
+        },
+        {
+            "label": "install here",
+            "command": "npm --prefix ${workspaceFolder} install;outfile=$(npm --prefix ${workspaceFolder} run vsce:package | grep -o ${workspaceFolder}/psalm-vscode-plugin-*.vsix);/tmp/code --install-extension $outfile",
+            "type": "shell",
+            "dependsOn": [
+                "get vscode cli"
+            ],
             "problemMatcher": []
         }
     ]
