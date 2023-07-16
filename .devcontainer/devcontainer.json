@@ -1,8 +1,14 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
 {
-	"name": "Node.js & TypeScript",
+	"name": "Node.js,TypeScript,and PHP",
 	"image": "mcr.microsoft.com/devcontainers/typescript-node:1-16-bullseye",
+	"features": {
+		"ghcr.io/devcontainers/features/php:1": {
+			"installComposer": true,
+			"version": "latest"
+		}
+	},
 	"customizations": {
 		"vscode": {
 			"extensions": [
