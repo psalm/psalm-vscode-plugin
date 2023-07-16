@@ -1,0 +1,1 @@
+This folder should contain sample PHP project files to test this extension on.
