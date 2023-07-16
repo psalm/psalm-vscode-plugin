@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<files psalm-version="5.13.1@086b94371304750d1c673315321a55d15fc59015">
+  <file src="app/Console/Kernel.php">
+    <UnusedClass>
+      <code>Kernel</code>
+    </UnusedClass>
+  </file>
+  <file src="app/Exceptions/Handler.php">
+    <UnusedClass>
+      <code>Handler</code>
+    </UnusedClass>
+    <UnusedClosureParam>
+      <code>$e</code>
+    </UnusedClosureParam>
+  </file>
+  <file src="app/Http/Controllers/Controller.php">
+    <UnusedClass>
+      <code>Controller</code>
+    </UnusedClass>
+  </file>
+  <file src="app/Http/Kernel.php">
+    <UnusedClass>
+      <code>Kernel</code>
+    </UnusedClass>
+  </file>
+  <file src="app/Http/Middleware/RedirectIfAuthenticated.php">
+    <PossiblyUnusedMethod>
+      <code>handle</code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="app/Http/Middleware/TrustHosts.php">
+    <UnusedClass>
+      <code>TrustHosts</code>
+    </UnusedClass>
+  </file>
+  <file src="app/Http/Middleware/ValidateSignature.php">
+    <PossiblyUnusedProperty>
+      <code>$except</code>
+    </PossiblyUnusedProperty>
+  </file>
+  <file src="app/Providers/AppServiceProvider.php">
+    <UnusedClass>
+      <code>AppServiceProvider</code>
+    </UnusedClass>
+  </file>
+  <file src="app/Providers/AuthServiceProvider.php">
+    <UnusedClass>
+      <code>AuthServiceProvider</code>
+    </UnusedClass>
+  </file>
+  <file src="app/Providers/BroadcastServiceProvider.php">
+    <UnusedClass>
+      <code>BroadcastServiceProvider</code>
+    </UnusedClass>
+  </file>
+  <file src="app/Providers/EventServiceProvider.php">
+    <UnusedClass>
+      <code>EventServiceProvider</code>
+    </UnusedClass>
+  </file>
+  <file src="database/factories/UserFactory.php">
+    <PossiblyUnusedMethod>
+      <code>unverified</code>
+    </PossiblyUnusedMethod>
+    <UnusedClosureParam>
+      <code>$attributes</code>
+    </UnusedClosureParam>
+  </file>
+  <file src="database/seeders/DatabaseSeeder.php">
+    <UnusedClass>
+      <code>DatabaseSeeder</code>
+    </UnusedClass>
+  </file>
+</files>
