@@ -1,0 +1,4 @@
+{
+    "psalm.psalmScriptPath": "vendor/bin/psalm-language-server",
+    "psalm.phpExecutablePath": "/usr/bin/php82"
+}
