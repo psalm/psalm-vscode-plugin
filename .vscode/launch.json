@@ -11,7 +11,8 @@
             "request": "launch",
             "args": [
                 "--extensionDevelopmentPath=${workspaceFolder}",
-                "--disable-extensions"
+                "--disable-extensions",
+                "${workspaceFolder}/fixtures/multi-folder.code-workspace"
             ],
             "outFiles": ["${workspaceFolder}/dist/**/*.js"],
             "preLaunchTask": "${defaultBuildTask}"
@@ -22,7 +23,8 @@
             "request": "launch",
             "args": [
                 "--extensionDevelopmentPath=${workspaceFolder}",
-                "--extensionTestsPath=${workspaceFolder}/out/test/suite/index"
+                "--extensionTestsPath=${workspaceFolder}/out/test/suite/index",
+                "${workspaceFolder}/fixtures/multi-folder.code-workspace"
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js",
