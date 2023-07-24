@@ -11,7 +11,10 @@ import { showReportIssueErrorMessage } from './utils';
 export default class LanguageServerErrorHandler implements ErrorHandler {
     private readonly restarts: number[];
 
-    constructor(private name: string, private maxRestartCount: number) {
+    constructor(
+        private name: string,
+        private maxRestartCount: number
+    ) {
         this.restarts = [];
     }
 

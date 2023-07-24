@@ -13,3 +13,4 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 .nvmrc
+.devcontainer/**
