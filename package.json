@@ -244,7 +244,7 @@
 		"@types/vscode": "^1.78.2",
 		"@types/which": "^3.0.0",
 		"@typescript-eslint/eslint-plugin": "^5.61.0",
-		"@typescript-eslint/parser": "^5.61.0",
+		"@typescript-eslint/parser": "^5.62.0",
 		"@vscode/vsce": "^2.19.0",
 		"eslint": "^8.44.0",
 		"eslint-config-prettier": "^8.8.0",
