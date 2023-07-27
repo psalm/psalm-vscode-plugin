@@ -174,14 +174,21 @@ export class LoggingService implements OutputChannel {
         if (logLevel === 'NONE') {
             return;
         }
-        this.logMessage(message, 'ERROR');
+        this.logRaw(message, 'ERROR', error);
+    }
+
+    /**
+     * This should only be used when a ConfigurationService isn't obvious
+     */
+    public logRaw(message: string, logLevel: LogLevel, error?: Error | string) {
+        this.logMessage(message, logLevel);
         if (typeof error === 'string') {
             // Errors as a string usually only happen with
             // plugins that don't return the expected error.
             this.appendLine(error);
         } else if (error?.message || error?.stack) {
             if (error?.message) {
-                this.logMessage(error.message, 'ERROR');
+                this.logMessage(error.message, logLevel);
             }
             if (error?.stack) {
                 this.appendLine(error.stack);

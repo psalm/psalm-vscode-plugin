@@ -14,25 +14,33 @@ import { showWarningMessage } from './utils';
 export async function activate(
     context: vscode.ExtensionContext
 ): Promise<void> {
-    // @ts-ignore
     const loggingService = new LoggingService();
-    // @ts-ignore
-    const configurationService = new ConfigurationService();
-    await configurationService.init();
-
-    // @ts-ignore
-    const statusBar = new StatusBar();
-
     const workspaceFolders = vscode.workspace.workspaceFolders;
 
     if (!workspaceFolders) {
-        loggingService.logError(
-            configurationService,
-            'Psalm must be run in a workspace. Select a workspace and reload the window'
+        loggingService.logRaw(
+            'Psalm must be run in a workspace. Select a workspace and reload the window',
+            'ERROR'
         );
         return;
     }
 
+    const configurationServices = workspaceFolders.map(
+        (folder) => new ConfigurationService(folder)
+    );
+
+    for (const initTask of configurationServices.map((config) =>
+        config.init()
+    )) {
+        await initTask;
+    }
+
+    /** @deprecated */
+    const configurationService = configurationServices[0];
+
+    const statusBar = new StatusBar();
+
+    /** @deprecated */
     const getCurrentWorkspace = (
         workspaceFolders1: readonly vscode.WorkspaceFolder[]
     ) => {
@@ -208,10 +216,7 @@ export async function activate(
         onWorkspacePathChange();
     });
 
-    loggingService.logDebug(
-        configurationService,
-        'Finished Extension Activation'
-    );
+    loggingService.logRaw('Finished Extension Activation', 'DEBUG');
 }
 
 export async function deactivate() {
