@@ -20,9 +20,6 @@ export async function activate(
     const configurationService = new ConfigurationService();
     await configurationService.init();
 
-    // Set Logging Level
-    loggingService.setOutputLevel(configurationService.get('logLevel'));
-
     // @ts-ignore
     const statusBar = new StatusBar();
 
@@ -30,6 +27,7 @@ export async function activate(
 
     if (!workspaceFolders) {
         loggingService.logError(
+            configurationService,
             'Psalm must be run in a workspace. Select a workspace and reload the window'
         );
         return;
@@ -93,6 +91,7 @@ export async function activate(
 
     if (!configPaths.length) {
         loggingService.logError(
+            configurationService,
             'No Config Paths defined. Define some and reload the window'
         );
         return;
@@ -101,17 +100,22 @@ export async function activate(
     if (!psalmXMLPaths.length) {
         // no psalm.xml found
         loggingService.logError(
+            configurationService,
             `No Config file found in: ${configPaths.join(',')}`
         );
         return;
     }
 
     loggingService.logDebug(
+        configurationService,
         'Found the following Psalm XML Configs:',
         psalmXMLPaths
     );
 
-    loggingService.logDebug(`Selecting first found config file: ${configXml}`);
+    loggingService.logDebug(
+        configurationService,
+        `Selecting first found config file: ${configXml}`
+    );
 
     let configWatcher = vscode.workspace.createFileSystemWatcher(configXml);
 
@@ -128,19 +132,28 @@ export async function activate(
         // kill the previous watcher
         configWatcher.dispose();
         configWatcher = vscode.workspace.createFileSystemWatcher(configXml);
-        loggingService.logInfo(`Workspace changed: ${workspacePath}`);
+        loggingService.logInfo(
+            configurationService,
+            `Workspace changed: ${workspacePath}`
+        );
         languageServer.setWorkspacePath(workspacePath);
         languageServer.setPsalmConfigPath(configXml);
         languageServer.restart();
     };
 
     const onConfigChange = () => {
-        loggingService.logInfo(`Config file changed: ${configXml}`);
+        loggingService.logInfo(
+            configurationService,
+            `Config file changed: ${configXml}`
+        );
         languageServer.restart();
     };
 
     const onConfigDelete = () => {
-        loggingService.logInfo(`Config file deleted: ${configXml}`);
+        loggingService.logInfo(
+            configurationService,
+            `Config file deleted: ${configXml}`
+        );
         languageServer.stop();
     };
 
@@ -167,7 +180,7 @@ export async function activate(
         ) {
             return;
         }
-        loggingService.logDebug('Configuration changed');
+        loggingService.logDebug(configurationService, 'Configuration changed');
         showWarningMessage(
             'You will need to reload this window for the new configuration to take effect'
         );
@@ -195,7 +208,10 @@ export async function activate(
         onWorkspacePathChange();
     });
 
-    loggingService.logDebug('Finished Extension Activation');
+    loggingService.logDebug(
+        configurationService,
+        'Finished Extension Activation'
+    );
 }
 
 export async function deactivate() {

@@ -1,12 +1,11 @@
 import { window, OutputChannel } from 'vscode';
+import { ConfigurationService } from './ConfigurationService';
 
 export type LogLevel = 'TRACE' | 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'NONE';
 export class LoggingService implements OutputChannel {
     readonly name: string = 'Psalm Language Server';
 
     private outputChannel = window.createOutputChannel('Psalm Language Server');
-
-    private logLevel: LogLevel = 'DEBUG';
 
     private content: string[] = [];
 
@@ -76,21 +75,18 @@ export class LoggingService implements OutputChannel {
         this.outputChannel.dispose();
     }
 
-    public setOutputLevel(logLevel: LogLevel) {
-        this.logLevel = logLevel;
-    }
-
-    public getOutputLevel(): LogLevel {
-        return this.logLevel;
-    }
-
-    public logTrace(message: string, data?: unknown): void {
+    public logTrace(
+        config: ConfigurationService,
+        message: string,
+        data?: unknown
+    ): void {
+        const logLevel = config.get('logLevel');
         if (
-            this.logLevel === 'NONE' ||
-            this.logLevel === 'INFO' ||
-            this.logLevel === 'WARN' ||
-            this.logLevel === 'ERROR' ||
-            this.logLevel === 'DEBUG'
+            logLevel === 'NONE' ||
+            logLevel === 'INFO' ||
+            logLevel === 'WARN' ||
+            logLevel === 'ERROR' ||
+            logLevel === 'DEBUG'
         ) {
             return;
         }
@@ -105,12 +101,17 @@ export class LoggingService implements OutputChannel {
      *
      * @param message The message to append to the output channel
      */
-    public logDebug(message: string, data?: unknown): void {
+    public logDebug(
+        config: ConfigurationService,
+        message: string,
+        data?: unknown
+    ): void {
+        const logLevel = config.get('logLevel');
         if (
-            this.logLevel === 'NONE' ||
-            this.logLevel === 'INFO' ||
-            this.logLevel === 'WARN' ||
-            this.logLevel === 'ERROR'
+            logLevel === 'NONE' ||
+            logLevel === 'INFO' ||
+            logLevel === 'WARN' ||
+            logLevel === 'ERROR'
         ) {
             return;
         }
@@ -125,11 +126,16 @@ export class LoggingService implements OutputChannel {
      *
      * @param message The message to append to the output channel
      */
-    public logInfo(message: string, data?: unknown): void {
+    public logInfo(
+        config: ConfigurationService,
+        message: string,
+        data?: unknown
+    ): void {
+        const logLevel = config.get('logLevel');
         if (
-            this.logLevel === 'NONE' ||
-            this.logLevel === 'WARN' ||
-            this.logLevel === 'ERROR'
+            logLevel === 'NONE' ||
+            logLevel === 'WARN' ||
+            logLevel === 'ERROR'
         ) {
             return;
         }
@@ -144,8 +150,13 @@ export class LoggingService implements OutputChannel {
      *
      * @param message The message to append to the output channel
      */
-    public logWarning(message: string, data?: unknown): void {
-        if (this.logLevel === 'NONE' || this.logLevel === 'ERROR') {
+    public logWarning(
+        config: ConfigurationService,
+        message: string,
+        data?: unknown
+    ): void {
+        const logLevel = config.get('logLevel');
+        if (logLevel === 'NONE' || logLevel === 'ERROR') {
             return;
         }
         this.logMessage(message, 'WARN');
@@ -154,8 +165,13 @@ export class LoggingService implements OutputChannel {
         }
     }
 
-    public logError(message: string, error?: Error | string) {
-        if (this.logLevel === 'NONE') {
+    public logError(
+        config: ConfigurationService,
+        message: string,
+        error?: Error | string
+    ) {
+        const logLevel = config.get('logLevel');
+        if (logLevel === 'NONE') {
             return;
         }
         this.logMessage(message, 'ERROR');
