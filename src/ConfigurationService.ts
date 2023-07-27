@@ -1,4 +1,4 @@
-import { workspace, WorkspaceConfiguration } from 'vscode';
+import { ConfigurationScope, workspace, WorkspaceConfiguration } from 'vscode';
 import which from 'which';
 import { join } from 'path';
 import { DocumentSelector, integer } from 'vscode-languageserver-protocol';
@@ -25,6 +25,7 @@ interface Config {
 }
 
 export class ConfigurationService {
+    private scope: ConfigurationScope;
     private config: Config = {
         maxRestartCount: 5,
         disableAutoComplete: false,
@@ -36,11 +37,13 @@ export class ConfigurationService {
         logLevel: 'INFO',
     };
 
-    public constructor() {}
+    public constructor(scope: ConfigurationScope) {
+        this.scope = scope;
+    }
 
     public async init() {
         const workspaceConfiguration: WorkspaceConfiguration =
-            workspace.getConfiguration('psalm');
+            workspace.getConfiguration('psalm', this.scope);
 
         // Work around until types are updated
         let whichPHP: Config['phpExecutablePath'];
