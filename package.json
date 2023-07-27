@@ -67,7 +67,8 @@
 				"psalm.phpExecutablePath": {
 					"type": "string",
 					"default": null,
-					"description": "Optional, defaults to searching for \"php\". The path to a PHP 7.0+ executable to use to execute the Psalm server. The PHP 7.0+ installation should preferably include and enable the PHP module `pcntl`. (Modifying requires VSCode reload)"
+					"description": "Optional, defaults to searching for \"php\". The path to a PHP 7.0+ executable to use to execute the Psalm server. The PHP 7.0+ installation should preferably include and enable the PHP module `pcntl`. (Modifying requires VSCode reload)",
+					"scope": "resource"
 				},
 				"psalm.phpExecutableArgs": {
 					"type": "array",
@@ -79,17 +80,20 @@
 						"-dxdebug.remote_enable=0",
 						"-dxdebug_profiler_enable=0"
 					],
-					"description": "Optional (Advanced), default is '-dxdebug.remote_autostart=0 -dxdebug.remote_enable=0 -dxdebug_profiler_enable=0'.  Additional PHP executable CLI arguments to use. (Modifying requires VSCode reload)"
+					"description": "Optional (Advanced), default is '-dxdebug.remote_autostart=0 -dxdebug.remote_enable=0 -dxdebug_profiler_enable=0'.  Additional PHP executable CLI arguments to use. (Modifying requires VSCode reload)",
+					"scope": "resource"
 				},
 				"psalm.psalmVersion": {
 					"type": "string",
 					"default": null,
-					"description": "Optional (Advanced). If provided, this overrides the Psalm version detection (Modifying requires VSCode reload)"
+					"description": "Optional (Advanced). If provided, this overrides the Psalm version detection (Modifying requires VSCode reload)",
+					"scope": "resource"
 				},
 				"psalm.psalmScriptPath": {
 					"type": "string",
 					"default": null,
-					"description": "Optional (Advanced). If provided, this overrides the Psalm script to use, e.g. vendor/bin/psalm-language-server. (Modifying requires VSCode reload)"
+					"description": "Optional (Advanced). If provided, this overrides the Psalm script to use, e.g. vendor/bin/psalm-language-server. (Modifying requires VSCode reload)",
+					"scope": "resource"
 				},
 				"psalm.psalmScriptArgs": {
 					"type": "array",
@@ -97,30 +101,35 @@
 						"type": "string"
 					},
 					"default": [],
-					"description": "Optional (Advanced). Additional arguments to the Psalm language server. (Modifying requires VSCode reload)"
+					"description": "Optional (Advanced). Additional arguments to the Psalm language server. (Modifying requires VSCode reload)",
+					"scope": "resource"
 				},
 				"psalm.psalmClientScriptPath": {
 					"type": "string",
 					"default": null,
 					"description": "Optional (Advanced). If provided, this overrides the Psalm script to use, e.g. vendor/bin/psalm. (Modifying requires VSCode reload)",
 					"markdownDeprecationMessage": "**Deprecated**: Please use `#psalm.psalmScriptPath#` instead.",
-					"deprecationMessage": "Deprecated: Please use psalm.psalmScriptPath instead."
+					"deprecationMessage": "Deprecated: Please use psalm.psalmScriptPath instead.",
+					"scope": "resource"
 				},
 				"psalm.enableUseIniDefaults": {
 					"type": "boolean",
 					"default": false,
-					"description": "Enable this to use PHP-provided ini defaults for memory and error display. (Modifying requires restart)"
+					"description": "Enable this to use PHP-provided ini defaults for memory and error display. (Modifying requires restart)",
+					"scope": "resource"
 				},
 				"psalm.enableDebugLog": {
 					"type": "boolean",
 					"default": false,
 					"description": "Enable this to print messages to the debug console when developing or debugging this VS Code extension. (Modifying requires VSCode reload)",
-					"deprecationMessage": "Deprecated: Please use psalm.enableVerbose, psalm.logLevel or psalm.trace.server instead."
+					"deprecationMessage": "Deprecated: Please use psalm.enableVerbose, psalm.logLevel or psalm.trace.server instead.",
+					"scope": "resource"
 				},
 				"psalm.enableVerbose": {
 					"type": "boolean",
 					"default": false,
-					"description": "Enable --verbose mode on the Psalm Language Server (Modifying requires VSCode reload)"
+					"description": "Enable --verbose mode on the Psalm Language Server (Modifying requires VSCode reload)",
+					"scope": "resource"
 				},
 				"psalm.logLevel": {
 					"type": "string",
@@ -134,7 +143,7 @@
 					],
 					"default": "INFO",
 					"description": "Traces the communication between VSCode and the Psalm language server.",
-					"scope": "window"
+					"scope": "resource"
 				},
 				"psalm.trace.server": {
 					"type": "string",
@@ -145,7 +154,7 @@
 					],
 					"default": "off",
 					"description": "Traces the communication between VSCode and the Psalm language server.",
-					"scope": "window"
+					"scope": "resource"
 				},
 				"psalm.analyzedFileExtensions": {
 					"type": "array",
@@ -159,22 +168,26 @@
 							"language": "php"
 						}
 					],
-					"description": "A list of file extensions to request Psalm to analyze. By default, this only includes 'php' (Modifying requires VSCode reload)"
+					"description": "A list of file extensions to request Psalm to analyze. By default, this only includes 'php' (Modifying requires VSCode reload)",
+					"scope": "resource"
 				},
 				"psalm.unusedVariableDetection": {
 					"type": "boolean",
 					"default": false,
-					"description": "Enable this to enable unused variable and parameter detection"
+					"description": "Enable this to enable unused variable and parameter detection",
+					"scope": "resource"
 				},
 				"psalm.connectToServerWithTcp": {
 					"type": "boolean",
 					"default": false,
-					"description": "If this is set to true, this VSCode extension will use TCP instead of the default STDIO to communicate with the Psalm language server. (Modifying requires VSCode reload)"
+					"description": "If this is set to true, this VSCode extension will use TCP instead of the default STDIO to communicate with the Psalm language server. (Modifying requires VSCode reload)",
+					"scope": "resource"
 				},
 				"psalm.disableAutoComplete": {
 					"type": "boolean",
 					"default": false,
-					"description": "Enable to disable autocomplete on methods and properties (Modifying requires VSCode reload)"
+					"description": "Enable to disable autocomplete on methods and properties (Modifying requires VSCode reload)",
+					"scope": "resource"
 				},
 				"psalm.configPaths": {
 					"type": "array",
@@ -185,17 +198,20 @@
 						"psalm.xml",
 						"psalm.xml.dist"
 					],
-					"description": "A list of files to checkup for psalm configuration (relative to the workspace directory)"
+					"description": "A list of files to checkup for psalm configuration (relative to the workspace directory)",
+					"scope": "resource"
 				},
 				"psalm.hideStatusMessageWhenRunning": {
 					"type": "boolean",
 					"default": true,
-					"description": "This will hide the Psalm status from the status bar when it is started and running.  This is useful to clear up a cluttered status bar."
+					"description": "This will hide the Psalm status from the status bar when it is started and running.  This is useful to clear up a cluttered status bar.",
+					"scope": "resource"
 				},
 				"psalm.maxRestartCount": {
 					"type": "number",
 					"default": 5,
-					"description": "The number of times the Language Server is allowed to crash and restart before it will no longer try to restart (Modifying requires VSCode reload)"
+					"description": "The number of times the Language Server is allowed to crash and restart before it will no longer try to restart (Modifying requires VSCode reload)",
+					"scope": "resource"
 				}
 			}
 		},
