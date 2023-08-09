@@ -182,7 +182,7 @@ export class LanguageServer {
             this.configurationService,
             'Starting language server'
         );
-        await this.languageClient.start();
+        await this.languageClient.start(); // https://github.com/vimeo/psalm/issues/10094 prevents multiple LSP instances
         // this.context.subscriptions.push(this.disposable);
         this.initalizing = false;
         this.ready = true;
