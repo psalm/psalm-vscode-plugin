@@ -4,6 +4,7 @@ import {
     ErrorHandler,
     RevealOutputChannelOn,
     DocumentFilter,
+    DynamicFeature,
 } from 'vscode-languageclient/node';
 import { StatusBar, LanguageServerStatus } from './StatusBar';
 import { spawn, ChildProcess } from 'child_process';
@@ -20,6 +21,7 @@ import { LoggingService } from './LoggingService';
 import { Writable } from 'stream';
 import { createServer } from 'net';
 import { showOpenSettingsPrompt, showErrorMessage } from './utils';
+import { ExecuteCommandFeature } from 'vscode-languageclient/lib/common/executeCommand';
 
 export class LanguageServer {
     private languageClient: LanguageClient;
@@ -182,7 +184,15 @@ export class LanguageServer {
             this.configurationService,
             'Starting language server'
         );
-        await this.languageClient.start(); // https://github.com/vimeo/psalm/issues/10094 prevents multiple LSP instances
+
+        await this.languageClient.start();
+        // #region TODO: temporary workaround. remove when https://github.com/vimeo/psalm/issues/10094 is resolved
+        const executeCommandFeature = this.languageClient.getFeature(
+            'workspace/executeCommand' as 'workspace/didDeleteFiles'
+        ) as unknown as DynamicFeature<ExecuteCommandFeature>;
+        executeCommandFeature.dispose();
+        // #endregion
+
         // this.context.subscriptions.push(this.disposable);
         this.initalizing = false;
         this.ready = true;
