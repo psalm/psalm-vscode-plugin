@@ -25,5 +25,6 @@
 	},
 	"otherPortsAttributes": {
 		"onAutoForward": "ignore"
-	}
+	},
+	"postCreateCommand": "npm install"
 }
