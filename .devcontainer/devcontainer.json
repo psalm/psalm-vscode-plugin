@@ -26,5 +26,5 @@
 	"otherPortsAttributes": {
 		"onAutoForward": "ignore"
 	},
-	"postCreateCommand": "npm install"
+	"postCreateCommand": "npm install && composer install -d ${workspaceFolder}/fixtures/sample-slim-webapp && composer install -d ${workspaceFolder}/fixtures/sample-laravel-webapp"
 }

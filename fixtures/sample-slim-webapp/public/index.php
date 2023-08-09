@@ -12,4 +12,8 @@ $app->get('/', function (Request $request, Response $response, $args) {
     return $response;
 });
 
+/** @psalm-var int */
+$info = 'abc';
+echo strlen($info);
+
 $app->run();

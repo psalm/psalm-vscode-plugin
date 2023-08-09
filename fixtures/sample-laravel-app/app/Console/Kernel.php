@@ -22,6 +22,10 @@ class Kernel extends ConsoleKernel
     {
         $this->load(__DIR__.'/Commands');
 
+        /** @psalm-var int */
+        $info = 'abc';
+        echo strlen($info);
+
         require base_path('routes/console.php');
     }
 }
