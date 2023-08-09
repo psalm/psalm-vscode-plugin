@@ -12,5 +12,19 @@
 				"amodio.tsl-problem-matcher"
 			]
 		}
-	}
+	},
+	"portsAttributes": {
+		"8000": {
+			"label": "Laravel",
+			"onAutoForward": "openBrowser"
+		},
+		"8080": {
+			"label": "Slim",
+			"onAutoForward": "openBrowser"
+		}
+	},
+	"otherPortsAttributes": {
+		"onAutoForward": "ignore"
+	},
+	"postCreateCommand": "npm install && composer install -d ${workspaceFolder}/fixtures/sample-slim-webapp && composer install -d ${workspaceFolder}/fixtures/sample-laravel-webapp"
 }

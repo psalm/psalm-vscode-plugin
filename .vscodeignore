@@ -1,6 +1,7 @@
 .github/**
 .vscode/**
 .vscode-test/**
+fixtures/**
 out/**
 node_modules/**
 src/**

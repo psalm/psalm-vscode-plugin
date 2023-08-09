@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "sample-laravel-app"
+		},
+		{
+			"path": "sample-slim-webapp"
+		}
+	],
+	"settings": {}
+}
