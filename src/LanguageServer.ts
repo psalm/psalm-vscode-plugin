@@ -3,10 +3,11 @@ import {
     StreamInfo,
     ErrorHandler,
     RevealOutputChannelOn,
+    DocumentFilter,
 } from 'vscode-languageclient/node';
 import { StatusBar, LanguageServerStatus } from './StatusBar';
 import { spawn, ChildProcess } from 'child_process';
-import { workspace, Uri, Disposable } from 'vscode';
+import { workspace, Uri, Disposable, WorkspaceFolder } from 'vscode';
 import { format, URL } from 'url';
 import { join, isAbsolute } from 'path';
 import { execFile } from 'promisify-child-process';
@@ -34,13 +35,13 @@ export class LanguageServer {
     private serverProcess: ChildProcess | null = null;
 
     constructor(
-        workspacePath: string,
+        workspaceFolder: WorkspaceFolder,
         psalmConfigPath: string,
         statusBar: StatusBar,
         configurationService: ConfigurationService,
         loggingService: LoggingService
     ) {
-        this.workspacePath = workspacePath;
+        this.workspacePath = workspaceFolder.uri.fsPath;
         this.statusBar = statusBar;
         this.configurationService = configurationService;
         this.psalmConfigPath = psalmConfigPath;
@@ -51,13 +52,33 @@ export class LanguageServer {
             'Psalm Language Server',
             this.serverOptions.bind(this),
             {
+                workspaceFolder: workspaceFolder,
                 outputChannel: this.loggingService,
                 traceOutputChannel: this.loggingService,
                 revealOutputChannelOn: RevealOutputChannelOn.Never,
                 // Register the server for php (and maybe HTML) documents
-                documentSelector: this.configurationService.get(
-                    'analyzedFileExtensions'
-                ),
+                documentSelector: this.configurationService
+                    .get('analyzedFileExtensions')
+                    ?.map((filter) => {
+                        if (typeof filter == 'string') {
+                            return filter;
+                        }
+                        const anyfilter = filter as any;
+                        if (anyfilter.notebook) {
+                            // keep as is
+                        } else if (anyfilter.pattern) {
+                            const existingPattern = anyfilter.pattern as string;
+                            if (existingPattern.startsWith('**')) {
+                                anyfilter.pattern = `${workspaceFolder.uri.fsPath}/${existingPattern}`;
+                            } else if (existingPattern.startsWith('*')) {
+                                anyfilter.pattern = `${workspaceFolder.uri.fsPath}/**/${existingPattern}`;
+                            }
+                            // otherwise keep as is
+                        } else {
+                            anyfilter.pattern = `${workspaceFolder.uri.fsPath}/**/*`;
+                        }
+                        return anyfilter as DocumentFilter;
+                    }),
                 uriConverters: {
                     // VS Code by default %-encodes even the colon after the drive letter
                     // NodeJS handles it much better

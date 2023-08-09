@@ -51,11 +51,7 @@ export async function activate(
             ? vscode.workspace.getWorkspaceFolder(uri)
             : workspaceFolders1[0];
 
-        const workspacePath1 = activeWorkspace
-            ? activeWorkspace.uri.fsPath
-            : workspaceFolders1[0].uri.fsPath;
-
-        return { workspacePath: workspacePath1 };
+        return activeWorkspace ? activeWorkspace : workspaceFolders1[0];
     };
 
     const getOptions = async () => {
@@ -73,12 +69,12 @@ export async function activate(
             return uri.path;
         });
 
-        const { workspacePath: workspacePath1 } =
-            getCurrentWorkspace(workspaceFolders);
+        const workspacePath1 = getCurrentWorkspace(workspaceFolders);
 
         const configXml1 =
-            psalmXMLPaths1.find((path) => path.startsWith(workspacePath1)) ??
-            psalmXMLPaths1[0];
+            psalmXMLPaths1.find((path) =>
+                path.startsWith(workspacePath1.uri.fsPath)
+            ) ?? psalmXMLPaths1[0];
 
         return {
             configPaths: configPaths1,
@@ -144,7 +140,7 @@ export async function activate(
             configurationService,
             `Workspace changed: ${workspacePath}`
         );
-        languageServer.setWorkspacePath(workspacePath);
+        languageServer.setWorkspacePath(workspacePath.uri.fsPath);
         languageServer.setPsalmConfigPath(configXml);
         languageServer.restart();
     };
