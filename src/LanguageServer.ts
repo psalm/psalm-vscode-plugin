@@ -3,10 +3,12 @@ import {
     StreamInfo,
     ErrorHandler,
     RevealOutputChannelOn,
+    DocumentFilter,
+    DynamicFeature,
 } from 'vscode-languageclient/node';
 import { StatusBar, LanguageServerStatus } from './StatusBar';
 import { spawn, ChildProcess } from 'child_process';
-import { workspace, Uri, Disposable } from 'vscode';
+import { workspace, Uri, Disposable, WorkspaceFolder } from 'vscode';
 import { format, URL } from 'url';
 import { join, isAbsolute } from 'path';
 import { execFile } from 'promisify-child-process';
@@ -19,6 +21,7 @@ import { LoggingService } from './LoggingService';
 import { Writable } from 'stream';
 import { createServer } from 'net';
 import { showOpenSettingsPrompt, showErrorMessage } from './utils';
+import { ExecuteCommandFeature } from 'vscode-languageclient/lib/common/executeCommand';
 
 export class LanguageServer {
     private languageClient: LanguageClient;
@@ -34,13 +37,13 @@ export class LanguageServer {
     private serverProcess: ChildProcess | null = null;
 
     constructor(
-        workspacePath: string,
+        workspaceFolder: WorkspaceFolder,
         psalmConfigPath: string,
         statusBar: StatusBar,
         configurationService: ConfigurationService,
         loggingService: LoggingService
     ) {
-        this.workspacePath = workspacePath;
+        this.workspacePath = workspaceFolder.uri.fsPath;
         this.statusBar = statusBar;
         this.configurationService = configurationService;
         this.psalmConfigPath = psalmConfigPath;
@@ -51,13 +54,33 @@ export class LanguageServer {
             'Psalm Language Server',
             this.serverOptions.bind(this),
             {
+                workspaceFolder: workspaceFolder,
                 outputChannel: this.loggingService,
                 traceOutputChannel: this.loggingService,
                 revealOutputChannelOn: RevealOutputChannelOn.Never,
                 // Register the server for php (and maybe HTML) documents
-                documentSelector: this.configurationService.get(
-                    'analyzedFileExtensions'
-                ),
+                documentSelector: this.configurationService
+                    .get('analyzedFileExtensions')
+                    ?.map((filter) => {
+                        if (typeof filter == 'string') {
+                            return filter;
+                        }
+                        const anyfilter = filter as any;
+                        if (anyfilter.notebook) {
+                            // keep as is
+                        } else if (anyfilter.pattern) {
+                            const existingPattern = anyfilter.pattern as string;
+                            if (existingPattern.startsWith('**')) {
+                                anyfilter.pattern = `${workspaceFolder.uri.fsPath}/${existingPattern}`;
+                            } else if (existingPattern.startsWith('*')) {
+                                anyfilter.pattern = `${workspaceFolder.uri.fsPath}/**/${existingPattern}`;
+                            }
+                            // otherwise keep as is
+                        } else {
+                            anyfilter.pattern = `${workspaceFolder.uri.fsPath}/**/*`;
+                        }
+                        return anyfilter as DocumentFilter;
+                    }),
                 uriConverters: {
                     // VS Code by default %-encodes even the colon after the drive letter
                     // NodeJS handles it much better
@@ -134,11 +157,15 @@ export class LanguageServer {
     public async stop() {
         if (this.initalizing) {
             this.loggingService.logWarning(
+                this.configurationService,
                 'Server is in the process of intializing'
             );
             return;
         }
-        this.loggingService.logInfo('Stopping language server');
+        this.loggingService.logInfo(
+            this.configurationService,
+            'Stopping language server'
+        );
         await this.languageClient.stop();
     }
 
@@ -153,16 +180,35 @@ export class LanguageServer {
 
         this.initalizing = true;
         this.statusBar.update(LanguageServerStatus.Initializing, 'starting');
-        this.loggingService.logInfo('Starting language server');
+        this.loggingService.logInfo(
+            this.configurationService,
+            'Starting language server'
+        );
+
         await this.languageClient.start();
+        const ver = await this.getPsalmLanguageServerVersion();
+
+        if (!(ver && semver.gte(ver, '5.15.0'))) {
+            const executeCommandFeature = this.languageClient.getFeature(
+                'workspace/executeCommand' as 'workspace/didDeleteFiles'
+            ) as unknown as DynamicFeature<ExecuteCommandFeature>;
+            executeCommandFeature.dispose();
+        }
+
         // this.context.subscriptions.push(this.disposable);
         this.initalizing = false;
         this.ready = true;
-        this.loggingService.logInfo('The Language Server is ready');
+        this.loggingService.logInfo(
+            this.configurationService,
+            'The Language Server is ready'
+        );
     }
 
     public async restart() {
-        this.loggingService.logInfo('Restarting language server');
+        this.loggingService.logInfo(
+            this.configurationService,
+            'Restarting language server'
+        );
         await this.stop();
         await this.start();
     }
@@ -203,6 +249,7 @@ export class LanguageServer {
             psalmVersionOverride !== null
         ) {
             this.loggingService.logWarning(
+                this.configurationService,
                 `Psalm Version was overridden to "${psalmVersionOverride}".` +
                     ' If this is not intentional please clear the Psalm Version Setting'
             );
@@ -216,17 +263,20 @@ export class LanguageServer {
             const ret = out.match(/^Psalm\s*((?:[0-9]+\.?)+)@([0-9a-f]{40})/);
             if (ret === null || ret.length !== 3) {
                 this.loggingService.logWarning(
+                    this.configurationService,
                     `Psalm Version could not be parsed as a Semantic Version. Got "${out}". Assuming unknown`
                 );
                 return null;
             }
             const [, version] = ret;
             this.loggingService.logInfo(
+                this.configurationService,
                 `Psalm Version was detected as ${version}`
             );
             return version;
         } catch (err) {
             this.loggingService.logWarning(
+                this.configurationService,
                 `Psalm Version could not be detected. Got "${err.message}". Assuming unknown`
             );
             return null;
@@ -309,16 +359,21 @@ export class LanguageServer {
             if (connectToServerWithTcp || process.platform === 'win32') {
                 const server = createServer((socket) => {
                     // 'connection' listener
-                    this.loggingService.logDebug('PHP process connected');
+                    this.loggingService.logDebug(
+                        this.configurationService,
+                        'PHP process connected'
+                    );
                     socket.on('end', () => {
                         this.loggingService.logDebug(
+                            this.configurationService,
                             'PHP process disconnected'
                         );
                     });
 
-                    if (this.loggingService.getOutputLevel() === 'TRACE') {
+                    if (this.configurationService.get('logLevel') === 'TRACE') {
                         socket.on('data', (chunk: Buffer) => {
                             this.loggingService.logDebug(
+                                this.configurationService,
                                 `SERVER ==> ${chunk}\n`
                             );
                         });
@@ -328,8 +383,12 @@ export class LanguageServer {
 
                     // @ts-ignore
                     writeable.write = (chunk, encoding, callback) => {
-                        if (this.loggingService.getOutputLevel() === 'TRACE') {
+                        if (
+                            this.configurationService.get('logLevel') ===
+                            'TRACE'
+                        ) {
                             this.loggingService.logDebug(
+                                this.configurationService,
                                 chunk.toString
                                     ? `SERVER <== ${chunk.toString()}\n`
                                     : chunk
@@ -433,6 +492,7 @@ export class LanguageServer {
             }
         } else if (semver.gte(languageServerVersion, '4.9.0')) {
             this.loggingService.logDebug(
+                this.configurationService,
                 `Psalm Language Server Version: ${languageServerVersion}`
             );
             psalmScriptArgs.unshift('--use-extended-diagnostic-codes');
@@ -470,22 +530,26 @@ export class LanguageServer {
         });
         this.serverProcess = childProcess;
         childProcess.stderr.on('data', (chunk: Buffer) => {
-            this.loggingService.logError(chunk + '');
+            this.loggingService.logError(this.configurationService, chunk + '');
         });
-        if (this.loggingService.getOutputLevel() === 'TRACE') {
+        if (this.configurationService.get('logLevel') === 'TRACE') {
             const orig = childProcess.stdin;
 
             childProcess.stdin = new Writable();
             // @ts-ignore
             childProcess.stdin.write = (chunk, encoding, callback) => {
                 this.loggingService.logDebug(
+                    this.configurationService,
                     chunk.toString ? `SERVER <== ${chunk.toString()}\n` : chunk
                 );
                 return orig.write(chunk, encoding, callback);
             };
 
             childProcess.stdout.on('data', (chunk: Buffer) => {
-                this.loggingService.logDebug(`SERVER ==> ${chunk}\n`);
+                this.loggingService.logDebug(
+                    this.configurationService,
+                    `SERVER ==> ${chunk}\n`
+                );
             });
         }
 
@@ -600,6 +664,7 @@ export class LanguageServer {
 
         if (!exists) {
             this.loggingService.logError(
+                this.configurationService,
                 `The setting psalm.psalmScriptPath refers to a path that does not exist. path: ${psalmScriptPath}`
             );
             return false;
