@@ -186,12 +186,14 @@ export class LanguageServer {
         );
 
         await this.languageClient.start();
-        // #region TODO: temporary workaround. remove when https://github.com/vimeo/psalm/issues/10094 is resolved
-        const executeCommandFeature = this.languageClient.getFeature(
-            'workspace/executeCommand' as 'workspace/didDeleteFiles'
-        ) as unknown as DynamicFeature<ExecuteCommandFeature>;
-        executeCommandFeature.dispose();
-        // #endregion
+        const ver = await this.getPsalmLanguageServerVersion();
+
+        if (!(ver && semver.gte(ver, '5.15.0'))) {
+            const executeCommandFeature = this.languageClient.getFeature(
+                'workspace/executeCommand' as 'workspace/didDeleteFiles'
+            ) as unknown as DynamicFeature<ExecuteCommandFeature>;
+            executeCommandFeature.dispose();
+        }
 
         // this.context.subscriptions.push(this.disposable);
         this.initalizing = false;
