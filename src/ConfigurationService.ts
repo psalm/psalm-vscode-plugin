@@ -12,6 +12,7 @@ interface Config {
     psalmScriptPath?: string;
     psalmScriptArgs?: string[];
     disableAutoComplete: boolean;
+    disableProvideHover: boolean;
     maxRestartCount: integer;
     unusedVariableDetection: boolean;
     enableVerbose: boolean;
@@ -28,6 +29,7 @@ export class ConfigurationService {
     private config: Config = {
         maxRestartCount: 5,
         disableAutoComplete: false,
+        disableProvideHover: false,
         unusedVariableDetection: false,
         enableVerbose: false,
         connectToServerWithTcp: false,
@@ -79,6 +81,11 @@ export class ConfigurationService {
 
         this.config.disableAutoComplete = workspaceConfiguration.get(
             'disableAutoComplete',
+            false
+        );
+
+        this.config.disableProvideHover = workspaceConfiguration.get(
+            'disableProvideHover',
             false
         );
 
