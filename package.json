@@ -176,6 +176,11 @@
                     "default": false,
                     "description": "Enable to disable autocomplete on methods and properties (Modifying requires VSCode reload)"
                 },
+                "psalm.disableProvideHover": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable to disable the providing hover definition on methods and properties (Modifying requires VSCode reload)"
+                },
                 "psalm.configPaths": {
                     "type": "array",
                     "items": {

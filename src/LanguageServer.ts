@@ -397,6 +397,14 @@ export class LanguageServer {
             args.unshift('--enable-autocomplete=false');
         }
 
+        const disableProvideHover = this.configurationService.get(
+            'disableProvideHover'
+        );
+
+        if (disableProvideHover) {
+            args.unshift('--enable-provide-hover=false');
+        }
+
         // Are we running psalm or psalm-language-server
         // if we are runing psalm them we need to forward to psalm-language-server
         const psalmHasLanguageServerOption: boolean =
