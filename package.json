@@ -31,7 +31,7 @@
         "url": "https://github.com/psalm/psalm-vscode-plugin"
     },
     "engines": {
-        "vscode": "^1.80.2"
+        "vscode": "^1.95.0"
     },
     "activationEvents": [
         "onLanguage:php",
@@ -248,7 +248,7 @@
         "@biomejs/biome": "^2.4.16",
         "@types/node": "^24.12.4",
         "@types/semver": "^7.7.1",
-        "@types/vscode": "^1.80.2",
+        "@types/vscode": "^1.95.0",
         "@types/which": "^3.0.0",
         "@vscode/vsce": "^3.9.1",
         "esbuild": "^0.28.0",

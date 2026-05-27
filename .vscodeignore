@@ -17,3 +17,6 @@ vsc-extension-quickstart.md
 test-project/**
 AGENTS.md
 CLAUDE.md
+biome.json
+esbuild.js
+.claude/**
