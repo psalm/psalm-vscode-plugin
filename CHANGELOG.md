@@ -7,10 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changes
+## [2.8.0] - 2026-05-27
 
--   Support v4.13.0 of code-server which supports Code v1.78.2
--   Cleanup old dependencies and remove need for webpack
+### Added
+
+-   New `psalm.disableProvideHover` setting to separately disable hover information from the language server (#286) [@madgomer98]
+
+### Changed
+
+-   Replaced webpack with esbuild for extension bundling
+-   Replaced ESLint + Prettier with Biome for linting and formatting
+-   Upgraded `vscode-languageclient` from v8 to v9
+-   Upgraded TypeScript to v6
+-   Updated VS Code engine types to 1.120.0
+-   Updated Node.js to v24
+-   Upgraded `@vscode/vsce` to v3
+-   Updated devcontainer and composer installer configuration (#290) [@MoonE]
 
 ## [2.7.0] - 2022-07-25
 

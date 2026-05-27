@@ -2,19 +2,36 @@
 name: Feature request
 about: Suggest an idea for this project
 title: ''
-labels: ''
+labels: type-enhancement
 assignees: ''
 
 ---
 
-**Is your feature request related to a problem? Please describe.**
+<!-- Please search existing issues to avoid creating duplicates;
+     https://github.com/psalm/psalm-vscode-plugin/issues?q=is%3Aopen+is%3Aissue+label%3Atype-enhancement
+-->
+
+# Feature Request
+
+## Problem
+
 A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
+## Proposed Solution
 
-**Describe alternatives you've considered**
+A clear and concise description of what you'd like to happen.
+
+## Alternatives Considered
+
 A clear and concise description of any alternative solutions or features you've considered.
 
-**Additional context**
+# Environment
+
+-   PHP version:
+-   Psalm version:
+-   VS Code version:
+-   Extension version:
+
+## Additional context
+
 Add any other context or screenshots about the feature request here.
