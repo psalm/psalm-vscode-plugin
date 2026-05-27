@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
-import { StatusBar } from './StatusBar';
-import { LoggingService } from './LoggingService';
 import { ConfigurationService } from './ConfigurationService';
-import { LanguageServer } from './LanguageServer';
 import { registerCommands } from './commands';
+import { LanguageServer } from './LanguageServer';
+import { LoggingService } from './LoggingService';
+import { StatusBar } from './StatusBar';
 import { showWarningMessage } from './utils';
 
 /**
@@ -11,43 +11,30 @@ import { showWarningMessage } from './utils';
  *
  * NOTE: This is only ever run once so it's safe to listen to events here
  */
-export async function activate(
-    context: vscode.ExtensionContext
-): Promise<void> {
-    // @ts-ignore
+export async function activate(context: vscode.ExtensionContext): Promise<void> {
     const loggingService = new LoggingService();
-    // @ts-ignore
     const configurationService = new ConfigurationService();
     await configurationService.init();
 
     // Set Logging Level
     loggingService.setOutputLevel(configurationService.get('logLevel'));
 
-    // @ts-ignore
     const statusBar = new StatusBar();
 
     const workspaceFolders = vscode.workspace.workspaceFolders;
 
     if (!workspaceFolders) {
-        loggingService.logError(
-            'Psalm must be run in a workspace. Select a workspace and reload the window'
-        );
+        loggingService.logError('Psalm must be run in a workspace. Select a workspace and reload the window');
         return;
     }
 
-    const getCurrentWorkspace = (
-        workspaceFolders1: readonly vscode.WorkspaceFolder[]
-    ) => {
+    const getCurrentWorkspace = (workspaceFolders1: readonly vscode.WorkspaceFolder[]) => {
         const { uri } = vscode.window.activeTextEditor?.document ?? {
             uri: undefined,
         };
-        const activeWorkspace = uri
-            ? vscode.workspace.getWorkspaceFolder(uri)
-            : workspaceFolders1[0];
+        const activeWorkspace = uri ? vscode.workspace.getWorkspaceFolder(uri) : workspaceFolders1[0];
 
-        const workspacePath1 = activeWorkspace
-            ? activeWorkspace.uri.fsPath
-            : workspaceFolders1[0].uri.fsPath;
+        const workspacePath1 = activeWorkspace ? activeWorkspace.uri.fsPath : workspaceFolders1[0].uri.fsPath;
 
         return { workspacePath: workspacePath1 };
     };
@@ -67,12 +54,9 @@ export async function activate(
             return uri.path;
         });
 
-        const { workspacePath: workspacePath1 } =
-            getCurrentWorkspace(workspaceFolders);
+        const { workspacePath: workspacePath1 } = getCurrentWorkspace(workspaceFolders);
 
-        const configXml1 =
-            psalmXMLPaths1.find((path) => path.startsWith(workspacePath1)) ??
-            psalmXMLPaths1[0];
+        const configXml1 = psalmXMLPaths1.find((path) => path.startsWith(workspacePath1)) ?? psalmXMLPaths1[0];
 
         return {
             configPaths: configPaths1,
@@ -92,36 +76,23 @@ export async function activate(
     } = await getOptions();
 
     if (!configPaths.length) {
-        loggingService.logError(
-            'No Config Paths defined. Define some and reload the window'
-        );
+        loggingService.logError('No Config Paths defined. Define some and reload the window');
         return;
     }
 
     if (!psalmXMLPaths.length) {
         // no psalm.xml found
-        loggingService.logError(
-            `No Config file found in: ${configPaths.join(',')}`
-        );
+        loggingService.logError(`No Config file found in: ${configPaths.join(',')}`);
         return;
     }
 
-    loggingService.logDebug(
-        'Found the following Psalm XML Configs:',
-        psalmXMLPaths
-    );
+    loggingService.logDebug('Found the following Psalm XML Configs:', psalmXMLPaths);
 
     loggingService.logDebug(`Selecting first found config file: ${configXml}`);
 
     let configWatcher = vscode.workspace.createFileSystemWatcher(configXml);
 
-    const languageServer = new LanguageServer(
-        workspacePath,
-        configXml,
-        statusBar,
-        configurationService,
-        loggingService
-    );
+    const languageServer = new LanguageServer(workspacePath, configXml, statusBar, configurationService, loggingService);
 
     // restart the language server when changing workspaces
     const onWorkspacePathChange = async () => {
@@ -149,28 +120,17 @@ export async function activate(
     configWatcher.onDidCreate(onConfigChange);
     configWatcher.onDidDelete(onConfigDelete);
 
-    context.subscriptions.push(
-        ...registerCommands(
-            languageServer,
-            configurationService,
-            loggingService
-        )
-    );
+    context.subscriptions.push(...registerCommands(languageServer, configurationService, loggingService));
 
     // Start Lanuage Server
     await languageServer.start();
 
     vscode.workspace.onDidChangeConfiguration(async (change) => {
-        if (
-            !change.affectsConfiguration('psalm') ||
-            change.affectsConfiguration('psalm.hideStatusMessageWhenRunning')
-        ) {
+        if (!change.affectsConfiguration('psalm') || change.affectsConfiguration('psalm.hideStatusMessageWhenRunning')) {
             return;
         }
         loggingService.logDebug('Configuration changed');
-        showWarningMessage(
-            'You will need to reload this window for the new configuration to take effect'
-        );
+        showWarningMessage('You will need to reload this window for the new configuration to take effect');
 
         await configurationService.init();
     });

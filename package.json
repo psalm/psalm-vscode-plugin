@@ -40,15 +40,16 @@
     ],
     "main": "./dist/extension.js",
     "scripts": {
-        "vscode:prepublish": "npm run compile",
-        "compile": "webpack",
-        "watch": "webpack --watch",
-        "package": "webpack --mode production --devtool hidden-source-map",
-        "compile-tests": "tsc -p . --outDir out",
-        "watch-tests": "tsc -p . -w --outDir out",
+        "vscode:prepublish": "npm run check && npm run package",
+        "compile": "node esbuild.js",
+        "watch": "node esbuild.js --watch",
+        "package": "node esbuild.js --production",
+        "check": "tsc --noEmit && biome check",
+        "lint": "biome lint",
+        "format": "biome format --write",
+        "test": "vscode-test",
         "vsce:package": "vsce package",
-        "vsce:publish": "vsce publish",
-        "lint": "eslint src --ext ts && tsc --noEmit"
+        "vsce:publish": "vsce publish"
     },
     "capabilities": {
         "untrustedWorkspaces": {
@@ -244,30 +245,21 @@
         }
     },
     "devDependencies": {
-        "@types/node": "16.11.68",
-        "@types/semver": "^7.5.2",
-        "@types/vscode": "1.80.0",
+        "@biomejs/biome": "^2.4.16",
+        "@types/node": "^24.12.4",
+        "@types/semver": "^7.7.1",
+        "@types/vscode": "1.120.0",
         "@types/which": "^3.0.0",
-        "@typescript-eslint/eslint-plugin": "^6.7.2",
-        "@typescript-eslint/parser": "^6.7.2",
-        "@vscode/vsce": "^2.21.0",
-        "eslint": "^8.49.0",
-        "eslint-config-prettier": "^9.0.0",
-        "eslint-plugin-import": "^2.28.1",
-        "eslint-plugin-jsdoc": "^46.8.1",
-        "prettier": "^3.0.3",
-        "ts-loader": "^9.4.4",
-        "typescript": "^5.2.2",
-        "webpack": "^5.88.2",
-        "webpack-cli": "^5.1.4",
-        "eslint-plugin-prettier": "^5.0.0"
+        "@vscode/vsce": "^3.9.1",
+        "esbuild": "^0.28.0",
+        "typescript": "^6.0.3"
     },
     "dependencies": {
         "@types/fs-extra": "^11.0.2",
         "fs-extra": "^11.1.1",
-        "promisify-child-process": "^4.1.2",
+        "promisify-child-process": "^5.0.1",
         "semver": "^7.5.4",
-        "vscode-languageclient": "^8.1.0",
-        "which": "^4.0.0"
+        "vscode-languageclient": "^9.0.1",
+        "which": "^7.0.0"
     }
 }

@@ -1,0 +1,5 @@
+{
+  "psalm.logLevel": "DEBUG",
+  "psalm.trace.server": "messages",
+  "psalm.psalmScriptPath": "vendor/bin/psalm-language-server"
+}

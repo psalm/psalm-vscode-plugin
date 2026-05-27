@@ -1,4 +1,4 @@
-import { StatusBarAlignment, StatusBarItem, ThemeColor, window } from 'vscode';
+import { StatusBarAlignment, type StatusBarItem, ThemeColor, window } from 'vscode';
 
 export enum LanguageServerStatus {
     Initializing = 'sync~spin',
@@ -32,9 +32,7 @@ export class StatusBar {
     public update(result: LanguageServerStatus, text: string): void {
         this.statusBarItem.text = `$(${result.toString()}) Psalm: ${text}`;
         if (result === LanguageServerStatus.Exited) {
-            this.statusBarItem.backgroundColor = new ThemeColor(
-                'statusBarItem.errorBackground'
-            );
+            this.statusBarItem.backgroundColor = new ThemeColor('statusBarItem.errorBackground');
         } else {
             this.statusBarItem.backgroundColor = undefined;
         }

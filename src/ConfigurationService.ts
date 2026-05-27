@@ -1,9 +1,9 @@
-import { workspace, WorkspaceConfiguration } from 'vscode';
+import { join } from 'node:path';
+import { type WorkspaceConfiguration, workspace } from 'vscode';
+import type { DocumentSelector, integer } from 'vscode-languageserver-protocol';
 import which from 'which';
-import { join } from 'path';
-import { DocumentSelector, integer } from 'vscode-languageserver-protocol';
+import type { LogLevel } from './LoggingService';
 import { showOpenSettingsPrompt } from './utils';
-import { LogLevel } from './LoggingService';
 
 interface Config {
     phpExecutablePath?: string;
@@ -38,106 +38,61 @@ export class ConfigurationService {
         logLevel: 'INFO',
     };
 
-    public constructor() {}
-
     public async init() {
-        const workspaceConfiguration: WorkspaceConfiguration =
-            workspace.getConfiguration('psalm');
+        const workspaceConfiguration: WorkspaceConfiguration = workspace.getConfiguration('psalm');
 
         // Work around until types are updated
         let whichPHP: Config['phpExecutablePath'];
         try {
             whichPHP = await which('php');
-        } catch (err) {}
+        } catch (_err) {}
 
         // PHP Executable Path or default to which
-        this.config.phpExecutablePath = workspaceConfiguration.get(
-            'phpExecutablePath',
-            whichPHP
-        );
+        this.config.phpExecutablePath = workspaceConfiguration.get('phpExecutablePath', whichPHP);
 
         // The Executable Arguments
-        this.config.phpExecutableArgs = workspaceConfiguration.get(
-            'phpExecutableArgs',
-            [
-                '-dxdebug.remote_autostart=0',
-                '-dxdebug.remote_enable=0',
-                '-dxdebug_profiler_enable=0',
-            ]
-        );
+        this.config.phpExecutableArgs = workspaceConfiguration.get('phpExecutableArgs', [
+            '-dxdebug.remote_autostart=0',
+            '-dxdebug.remote_enable=0',
+            '-dxdebug_profiler_enable=0',
+        ]);
 
-        this.config.psalmVersion =
-            workspaceConfiguration.get<string>('psalmVersion');
+        this.config.psalmVersion = workspaceConfiguration.get<string>('psalmVersion');
 
         this.config.psalmScriptPath = workspaceConfiguration.get(
             'psalmScriptPath',
             join('vendor', 'vimeo', 'psalm', 'psalm-language-server')
         );
 
-        this.config.psalmScriptArgs = workspaceConfiguration.get(
-            'psalmScriptArgs',
-            []
-        );
+        this.config.psalmScriptArgs = workspaceConfiguration.get('psalmScriptArgs', []);
 
-        this.config.disableAutoComplete = workspaceConfiguration.get(
-            'disableAutoComplete',
-            false
-        );
+        this.config.disableAutoComplete = workspaceConfiguration.get('disableAutoComplete', false);
 
-        this.config.disableProvideHover = workspaceConfiguration.get(
-            'disableProvideHover',
-            false
-        );
+        this.config.disableProvideHover = workspaceConfiguration.get('disableProvideHover', false);
 
-        this.config.maxRestartCount = workspaceConfiguration.get(
-            'maxRestartCount',
-            5
-        );
+        this.config.maxRestartCount = workspaceConfiguration.get('maxRestartCount', 5);
 
-        this.config.unusedVariableDetection = workspaceConfiguration.get(
-            'unusedVariableDetection',
-            false
-        );
+        this.config.unusedVariableDetection = workspaceConfiguration.get('unusedVariableDetection', false);
 
-        this.config.enableVerbose = workspaceConfiguration.get(
-            'enableVerbose',
-            false
-        );
+        this.config.enableVerbose = workspaceConfiguration.get('enableVerbose', false);
 
-        this.config.connectToServerWithTcp = workspaceConfiguration.get(
-            'connectToServerWithTcp',
-            false
-        );
+        this.config.connectToServerWithTcp = workspaceConfiguration.get('connectToServerWithTcp', false);
 
-        this.config.enableUseIniDefaults = workspaceConfiguration.get(
-            'enableUseIniDefaults',
-            false
-        );
+        this.config.enableUseIniDefaults = workspaceConfiguration.get('enableUseIniDefaults', false);
 
         this.config.logLevel = workspaceConfiguration.get('logLevel', 'INFO');
 
-        this.config.analyzedFileExtensions = workspaceConfiguration.get(
-            'analyzedFileExtensions',
-            [{ scheme: 'file', language: 'php' }]
-        );
+        this.config.analyzedFileExtensions = workspaceConfiguration.get('analyzedFileExtensions', [{ scheme: 'file', language: 'php' }]);
 
-        this.config.configPaths = workspaceConfiguration.get('configPaths', [
-            'psalm.xml',
-            'psalm.xml.dist',
-        ]);
+        this.config.configPaths = workspaceConfiguration.get('configPaths', ['psalm.xml', 'psalm.xml.dist']);
 
-        this.config.hideStatusMessageWhenRunning = workspaceConfiguration.get(
-            'hideStatusMessageWhenRunning',
-            false
-        );
+        this.config.hideStatusMessageWhenRunning = workspaceConfiguration.get('hideStatusMessageWhenRunning', false);
     }
 
     public async validate(): Promise<boolean> {
         // Check if the psalmServerScriptPath setting was provided.
         if (!this.config.psalmServerScriptPath) {
-            await showOpenSettingsPrompt(
-                'The setting psalm.psalmScriptPath must be provided (e.g. vendor/bin/psalm-language-server)'
-            );
+            await showOpenSettingsPrompt('The setting psalm.psalmScriptPath must be provided (e.g. vendor/bin/psalm-language-server)');
             return false;
         }
         return true;

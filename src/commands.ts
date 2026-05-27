@@ -1,30 +1,26 @@
+import { EOL } from 'node:os';
+import * as path from 'node:path';
+import * as semver from 'semver';
 import * as vscode from 'vscode';
 import { ExitNotification } from 'vscode-languageclient/node';
-import * as semver from 'semver';
-import { LanguageServer } from './LanguageServer';
-import * as path from 'path';
+import type { ConfigurationService } from './ConfigurationService';
 import { EXTENSION_ROOT_DIR } from './constants';
+import type { LanguageServer } from './LanguageServer';
+import type { LoggingService } from './LoggingService';
 import { formatFromTemplate } from './utils';
-import { ConfigurationService } from './ConfigurationService';
-import { LoggingService } from './LoggingService';
-import { EOL } from 'os';
+
 interface Command {
     id: string;
     execute(): void;
 }
 
-async function restartSever(
-    client: LanguageServer,
-    configurationService: ConfigurationService
-) {
+async function restartSever(client: LanguageServer, configurationService: ConfigurationService) {
     const languageServerVersion = await client.getPsalmLanguageServerVersion();
     if (languageServerVersion === null) {
         const reload = await vscode.window.showWarningMessage(
-            'This version of Psalm has a bug in that the only way' +
-                'to force the Language Server to re-analyze the workspace' +
-                `is to forcefully crash it. VSCode limitations only allow us to do this ${configurationService.get(
-                    'maxRestartCount'
-                )} times per session. Consider upgrading to at least 4.9.0 of Psalm`,
+            `This version of Psalm has a bug in that the only wayto force the Language Server to re-analyze the workspaceis to forcefully crash it. VSCode limitations only allow us to do this ${configurationService.get(
+                'maxRestartCount'
+            )} times per session. Consider upgrading to at least 4.9.0 of Psalm`,
             'Ok',
             'Cancel'
         );
@@ -37,10 +33,7 @@ async function restartSever(
     }
 }
 
-function analyzeWorkSpace(
-    client: LanguageServer,
-    configurationService: ConfigurationService
-): Command {
+function analyzeWorkSpace(client: LanguageServer, configurationService: ConfigurationService): Command {
     return {
         id: 'psalm.analyzeWorkSpace',
         async execute() {
@@ -49,10 +42,7 @@ function analyzeWorkSpace(
     };
 }
 
-function restartPsalmServer(
-    client: LanguageServer,
-    configurationService: ConfigurationService
-): Command {
+function restartPsalmServer(client: LanguageServer, configurationService: ConfigurationService): Command {
     return {
         id: 'psalm.restartPsalmServer',
         async execute() {
@@ -61,19 +51,11 @@ function restartPsalmServer(
     };
 }
 
-function reportIssue(
-    client: LanguageServer,
-    configurationService: ConfigurationService,
-    loggingService: LoggingService
-): Command {
+function reportIssue(client: LanguageServer, configurationService: ConfigurationService, loggingService: LoggingService): Command {
     return {
         id: 'psalm.reportIssue',
         async execute() {
-            const templatePath = path.join(
-                EXTENSION_ROOT_DIR,
-                'resources',
-                'report_issue_template.md'
-            );
+            const templatePath = path.join(EXTENSION_ROOT_DIR, 'resources', 'report_issue_template.md');
 
             const userSettings = Object.entries(configurationService.getAll())
                 .map(([key, value]) => `${key}: ${JSON.stringify(value)}`)
@@ -84,30 +66,26 @@ function reportIssue(
             try {
                 phpVersion = (await client.getPHPVersion()) ?? 'unknown';
             } catch (err) {
-                phpVersion = err.message;
+                phpVersion = err instanceof Error ? err.message : String(err);
             }
 
             let psalmVersion: string | null = 'unknown';
             try {
-                psalmVersion =
-                    (await client.getPsalmLanguageServerVersion()) ?? 'unknown';
+                psalmVersion = (await client.getPsalmLanguageServerVersion()) ?? 'unknown';
             } catch (err) {
-                psalmVersion = err.message;
+                psalmVersion = err instanceof Error ? err.message : String(err);
             }
 
-            await vscode.commands.executeCommand(
-                'workbench.action.openIssueReporter',
-                {
-                    extensionId: 'getpsalm.psalm-vscode-plugin',
-                    issueBody: await formatFromTemplate(
-                        templatePath,
-                        phpVersion, // 0
-                        psalmVersion, // 1
-                        psalmLogs, // 2
-                        userSettings // 3
-                    ),
-                }
-            );
+            await vscode.commands.executeCommand('workbench.action.openIssueReporter', {
+                extensionId: 'getpsalm.psalm-vscode-plugin',
+                issueBody: await formatFromTemplate(
+                    templatePath,
+                    phpVersion, // 0
+                    psalmVersion, // 1
+                    psalmLogs, // 2
+                    userSettings // 3
+                ),
+            });
         },
     };
 }
@@ -133,9 +111,7 @@ export function registerCommands(
         showOutput(loggingService),
     ];
 
-    const disposables = commands.map((command) =>
-        vscode.commands.registerCommand(command.id, command.execute)
-    );
+    const disposables = commands.map((command) => vscode.commands.registerCommand(command.id, command.execute));
 
     return disposables;
 }

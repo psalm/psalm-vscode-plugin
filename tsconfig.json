@@ -15,6 +15,7 @@
         "noUnusedLocals": true,
         "allowUnreachableCode": false,
         "allowUnusedLabels": false,
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "skipLibCheck": true
 	}
 }

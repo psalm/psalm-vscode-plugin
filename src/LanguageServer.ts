@@ -1,24 +1,19 @@
-import {
-    LanguageClient,
-    StreamInfo,
-    ErrorHandler,
-    RevealOutputChannelOn,
-} from 'vscode-languageclient/node';
-import { StatusBar, LanguageServerStatus } from './StatusBar';
-import { spawn, ChildProcess } from 'child_process';
-import { workspace, Uri, Disposable } from 'vscode';
-import { format, URL } from 'url';
-import { join, isAbsolute } from 'path';
+import { type ChildProcess, spawn } from 'node:child_process';
+import { constants, statSync } from 'node:fs';
+import { access } from 'node:fs/promises';
+import { createServer } from 'node:net';
+import { isAbsolute, join } from 'node:path';
+import { Writable } from 'node:stream';
+import { format, URL } from 'node:url';
 import { execFile } from 'promisify-child-process';
-import { ConfigurationService } from './ConfigurationService';
-import LanguageServerErrorHandler from './LanguageServerErrorHandler';
-import { statSync, constants } from 'fs';
-import { access } from 'fs/promises';
 import * as semver from 'semver';
-import { LoggingService } from './LoggingService';
-import { Writable } from 'stream';
-import { createServer } from 'net';
-import { showOpenSettingsPrompt, showErrorMessage } from './utils';
+import { type Disposable, Uri, workspace } from 'vscode';
+import { type ErrorHandler, LanguageClient, RevealOutputChannelOn, type StreamInfo } from 'vscode-languageclient/node';
+import type { ConfigurationService } from './ConfigurationService';
+import LanguageServerErrorHandler from './LanguageServerErrorHandler';
+import type { LoggingService } from './LoggingService';
+import { LanguageServerStatus, type StatusBar } from './StatusBar';
+import { showErrorMessage, showOpenSettingsPrompt } from './utils';
 
 export class LanguageServer {
     private languageClient: LanguageClient;
@@ -26,11 +21,11 @@ export class LanguageServer {
     private statusBar: StatusBar;
     private configurationService: ConfigurationService;
     private psalmConfigPath: string;
-    private debug: boolean;
+    private debug = false;
     private loggingService: LoggingService;
     private ready = false;
     private initalizing = false;
-    private disposable: Disposable;
+    private disposable!: Disposable;
     private serverProcess: ChildProcess | null = null;
 
     constructor(
@@ -55,14 +50,11 @@ export class LanguageServer {
                 traceOutputChannel: this.loggingService,
                 revealOutputChannelOn: RevealOutputChannelOn.Never,
                 // Register the server for php (and maybe HTML) documents
-                documentSelector: this.configurationService.get(
-                    'analyzedFileExtensions'
-                ),
+                documentSelector: this.configurationService.get('analyzedFileExtensions'),
                 uriConverters: {
                     // VS Code by default %-encodes even the colon after the drive letter
                     // NodeJS handles it much better
-                    code2Protocol: (uri: Uri): string =>
-                        format(new URL(uri.toString(true))),
+                    code2Protocol: (uri: Uri): string => format(new URL(uri.toString(true))),
                     protocol2Code: (str: string): Uri => Uri.parse(str),
                 },
                 synchronize: {
@@ -75,9 +67,7 @@ export class LanguageServer {
                     ],
                 },
                 progressOnInitialization: true,
-                errorHandler: this.createDefaultErrorHandler(
-                    this.configurationService.get('maxRestartCount') - 1
-                ),
+                errorHandler: this.createDefaultErrorHandler(this.configurationService.get('maxRestartCount') - 1),
             },
             this.debug
         );
@@ -105,10 +95,7 @@ export class LanguageServer {
         if (maxRestartCount !== undefined && maxRestartCount < 0) {
             throw new Error(`Invalid maxRestartCount: ${maxRestartCount}`);
         }
-        return new LanguageServerErrorHandler(
-            'Psalm Language Server',
-            maxRestartCount ?? 4
-        );
+        return new LanguageServerErrorHandler('Psalm Language Server', maxRestartCount ?? 4);
     }
 
     public getServerProcess(): ChildProcess | null {
@@ -133,9 +120,7 @@ export class LanguageServer {
 
     public async stop() {
         if (this.initalizing) {
-            this.loggingService.logWarning(
-                'Server is in the process of intializing'
-            );
+            this.loggingService.logWarning('Server is in the process of intializing');
             return;
         }
         this.loggingService.logInfo('Stopping language server');
@@ -144,8 +129,7 @@ export class LanguageServer {
 
     public async start() {
         // Check if psalm is installed and supports the language server protocol.
-        const isValidPsalmVersion: boolean =
-            await this.checkPsalmHasLanguageServer();
+        const isValidPsalmVersion: boolean = await this.checkPsalmHasLanguageServer();
         if (!isValidPsalmVersion) {
             showOpenSettingsPrompt('Psalm is not installed');
             return;
@@ -195,16 +179,11 @@ export class LanguageServer {
             throw new Error(msg);
         }
 
-        const psalmVersionOverride =
-            this.configurationService.get('psalmVersion');
+        const psalmVersionOverride = this.configurationService.get('psalmVersion');
 
-        if (
-            typeof psalmVersionOverride !== 'undefined' &&
-            psalmVersionOverride !== null
-        ) {
+        if (typeof psalmVersionOverride !== 'undefined' && psalmVersionOverride !== null) {
             this.loggingService.logWarning(
-                `Psalm Version was overridden to "${psalmVersionOverride}".` +
-                    ' If this is not intentional please clear the Psalm Version Setting'
+                `Psalm Version was overridden to "${psalmVersionOverride}". If this is not intentional please clear the Psalm Version Setting`
             );
             return psalmVersionOverride;
         }
@@ -215,34 +194,24 @@ export class LanguageServer {
             // Psalm 4.8.1@f73f2299dbc59a3e6c4d66cff4605176e728ee69
             const ret = out.match(/^Psalm\s*((?:[0-9]+\.?)+)@([0-9a-f]{40})/);
             if (ret === null || ret.length !== 3) {
-                this.loggingService.logWarning(
-                    `Psalm Version could not be parsed as a Semantic Version. Got "${out}". Assuming unknown`
-                );
+                this.loggingService.logWarning(`Psalm Version could not be parsed as a Semantic Version. Got "${out}". Assuming unknown`);
                 return null;
             }
             const [, version] = ret;
-            this.loggingService.logInfo(
-                `Psalm Version was detected as ${version}`
-            );
+            this.loggingService.logInfo(`Psalm Version was detected as ${version}`);
             return version;
         } catch (err) {
             this.loggingService.logWarning(
-                `Psalm Version could not be detected. Got "${err.message}". Assuming unknown`
+                `Psalm Version could not be detected. Got "${err instanceof Error ? err.message : String(err)}". Assuming unknown`
             );
             return null;
         }
     }
 
-    private onTelemetry(params: any) {
-        if (
-            typeof params === 'object' &&
-            'message' in params &&
-            typeof params.message === 'string'
-        ) {
+    private onTelemetry(params: unknown) {
+        if (params !== null && typeof params === 'object' && 'message' in params && typeof params.message === 'string') {
             // each time we get a new telemetry, we are going to check the config, and update as needed
-            const hideStatusMessageWhenRunning = this.configurationService.get(
-                'hideStatusMessageWhenRunning'
-            );
+            const hideStatusMessageWhenRunning = this.configurationService.get('hideStatusMessageWhenRunning');
 
             let status: string = params.message;
 
@@ -252,40 +221,22 @@ export class LanguageServer {
 
             switch (status) {
                 case 'initializing':
-                    this.statusBar.update(
-                        LanguageServerStatus.Initializing,
-                        params.message
-                    );
+                    this.statusBar.update(LanguageServerStatus.Initializing, params.message);
                     break;
                 case 'initialized':
-                    this.statusBar.update(
-                        LanguageServerStatus.Initialized,
-                        params.message
-                    );
+                    this.statusBar.update(LanguageServerStatus.Initialized, params.message);
                     break;
                 case 'running':
-                    this.statusBar.update(
-                        LanguageServerStatus.Running,
-                        params.message
-                    );
+                    this.statusBar.update(LanguageServerStatus.Running, params.message);
                     break;
                 case 'analyzing':
-                    this.statusBar.update(
-                        LanguageServerStatus.Analyzing,
-                        params.message
-                    );
+                    this.statusBar.update(LanguageServerStatus.Analyzing, params.message);
                     break;
                 case 'closing':
-                    this.statusBar.update(
-                        LanguageServerStatus.Closing,
-                        params.message
-                    );
+                    this.statusBar.update(LanguageServerStatus.Closing, params.message);
                     break;
                 case 'closed':
-                    this.statusBar.update(
-                        LanguageServerStatus.Closed,
-                        params.message
-                    );
+                    this.statusBar.update(LanguageServerStatus.Closed, params.message);
                     break;
             }
 
@@ -298,10 +249,8 @@ export class LanguageServer {
     }
 
     private serverOptions(): Promise<ChildProcess | StreamInfo> {
-        return new Promise<ChildProcess | StreamInfo>((resolve, reject) => {
-            const connectToServerWithTcp = this.configurationService.get(
-                'connectToServerWithTcp'
-            );
+        return new Promise<ChildProcess | StreamInfo>((resolve, _reject) => {
+            const connectToServerWithTcp = this.configurationService.get('connectToServerWithTcp');
 
             // Use a TCP socket on Windows because of problems with blocking STDIO
             // stdio locks up for large responses
@@ -311,29 +260,21 @@ export class LanguageServer {
                     // 'connection' listener
                     this.loggingService.logDebug('PHP process connected');
                     socket.on('end', () => {
-                        this.loggingService.logDebug(
-                            'PHP process disconnected'
-                        );
+                        this.loggingService.logDebug('PHP process disconnected');
                     });
 
                     if (this.loggingService.getOutputLevel() === 'TRACE') {
                         socket.on('data', (chunk: Buffer) => {
-                            this.loggingService.logDebug(
-                                `SERVER ==> ${chunk}\n`
-                            );
+                            this.loggingService.logDebug(`SERVER ==> ${chunk}\n`);
                         });
                     }
 
                     const writeable = new Writable();
 
-                    // @ts-ignore
+                    // @ts-expect-error
                     writeable.write = (chunk, encoding, callback) => {
                         if (this.loggingService.getOutputLevel() === 'TRACE') {
-                            this.loggingService.logDebug(
-                                chunk.toString
-                                    ? `SERVER <== ${chunk.toString()}\n`
-                                    : chunk
-                            );
+                            this.loggingService.logDebug(chunk.toString ? `SERVER <== ${chunk.toString()}\n` : chunk);
                         }
                         return socket.write(chunk, encoding, callback);
                     };
@@ -345,8 +286,8 @@ export class LanguageServer {
                     // Start the language server
                     // make the language server connect to the client listening on <addr> (e.g. 127.0.0.1:<port>)
                     this.spawnServer([
-                        // @ts-ignore
-                        '--tcp=127.0.0.1:' + server.address().port,
+                        // @ts-expect-error
+                        `--tcp=127.0.0.1:${server.address().port}`,
                     ]);
                 });
             } else {
@@ -363,11 +304,9 @@ export class LanguageServer {
      * @return Promise<ChildProcess> A promise that resolves to the spawned process
      */
     private async spawnServer(args: string[] = []): Promise<ChildProcess> {
-        const languageServerVersion: string | null =
-            await this.getPsalmLanguageServerVersion();
+        const languageServerVersion: string | null = await this.getPsalmLanguageServerVersion();
 
-        const extraServerArgs =
-            this.configurationService.get('psalmScriptArgs');
+        const extraServerArgs = this.configurationService.get('psalmScriptArgs');
 
         if (extraServerArgs) {
             if (Array.isArray(extraServerArgs)) {
@@ -375,9 +314,7 @@ export class LanguageServer {
             }
         }
 
-        const unusedVariableDetection = this.configurationService.get(
-            'unusedVariableDetection'
-        );
+        const unusedVariableDetection = this.configurationService.get('unusedVariableDetection');
 
         if (unusedVariableDetection) {
             args.unshift('--find-dead-code');
@@ -389,17 +326,13 @@ export class LanguageServer {
             args.unshift('--verbose');
         }
 
-        const disableAutoComplete = this.configurationService.get(
-            'disableAutoComplete'
-        );
+        const disableAutoComplete = this.configurationService.get('disableAutoComplete');
 
         if (disableAutoComplete) {
             args.unshift('--enable-autocomplete=false');
         }
 
-        const disableProvideHover = this.configurationService.get(
-            'disableProvideHover'
-        );
+        const disableProvideHover = this.configurationService.get('disableProvideHover');
 
         if (disableProvideHover) {
             args.unshift('--enable-provide-hover=false');
@@ -407,50 +340,26 @@ export class LanguageServer {
 
         // Are we running psalm or psalm-language-server
         // if we are runing psalm them we need to forward to psalm-language-server
-        const psalmHasLanguageServerOption: boolean =
-            await this.checkPsalmLanguageServerHasOption(
-                [],
-                '--language-server'
-            );
+        const psalmHasLanguageServerOption: boolean = await this.checkPsalmLanguageServerHasOption([], '--language-server');
 
-        const psalmScriptArgs: string[] = psalmHasLanguageServerOption
-            ? ['--language-server']
-            : [];
+        const psalmScriptArgs: string[] = psalmHasLanguageServerOption ? ['--language-server'] : [];
 
-        if (
-            languageServerVersion === null ||
-            semver.lt(languageServerVersion, '4.9.0')
-        ) {
-            if (
-                await this.checkPsalmLanguageServerHasOption(
-                    psalmScriptArgs,
-                    '--use-extended-diagnostic-codes'
-                )
-            ) {
+        if (languageServerVersion === null || semver.lt(languageServerVersion, '4.9.0')) {
+            if (await this.checkPsalmLanguageServerHasOption(psalmScriptArgs, '--use-extended-diagnostic-codes')) {
                 psalmScriptArgs.unshift('--use-extended-diagnostic-codes');
             }
 
-            if (
-                enableVerbose &&
-                (await this.checkPsalmLanguageServerHasOption(
-                    psalmScriptArgs,
-                    '--verbose'
-                ))
-            ) {
+            if (enableVerbose && (await this.checkPsalmLanguageServerHasOption(psalmScriptArgs, '--verbose'))) {
                 psalmScriptArgs.unshift('--verbose');
             }
         } else if (semver.gte(languageServerVersion, '4.9.0')) {
-            this.loggingService.logDebug(
-                `Psalm Language Server Version: ${languageServerVersion}`
-            );
+            this.loggingService.logDebug(`Psalm Language Server Version: ${languageServerVersion}`);
             psalmScriptArgs.unshift('--use-extended-diagnostic-codes');
             if (enableVerbose) {
                 psalmScriptArgs.unshift('--verbose');
             }
 
-            const enableUseIniDefaults = this.configurationService.get(
-                'enableUseIniDefaults'
-            );
+            const enableUseIniDefaults = this.configurationService.get('enableUseIniDefaults');
 
             if (enableUseIniDefaults) {
                 psalmScriptArgs.unshift('--use-ini-defaults');
@@ -478,17 +387,15 @@ export class LanguageServer {
         });
         this.serverProcess = childProcess;
         childProcess.stderr.on('data', (chunk: Buffer) => {
-            this.loggingService.logError(chunk + '');
+            this.loggingService.logError(`${chunk}`);
         });
         if (this.loggingService.getOutputLevel() === 'TRACE') {
             const orig = childProcess.stdin;
 
             childProcess.stdin = new Writable();
-            // @ts-ignore
+            // @ts-expect-error
             childProcess.stdin.write = (chunk, encoding, callback) => {
-                this.loggingService.logDebug(
-                    chunk.toString ? `SERVER <== ${chunk.toString()}\n` : chunk
-                );
+                this.loggingService.logDebug(chunk.toString ? `SERVER <== ${chunk.toString()}\n` : chunk);
                 return orig.write(chunk, encoding, callback);
             };
 
@@ -497,11 +404,8 @@ export class LanguageServer {
             });
         }
 
-        childProcess.on('exit', (code, signal) => {
-            this.statusBar.update(
-                LanguageServerStatus.Exited,
-                'Exited (Should Restart)'
-            );
+        childProcess.on('exit', (_code, _signal) => {
+            this.statusBar.update(LanguageServerStatus.Exited, 'Exited (Should Restart)');
         });
         return childProcess;
     }
@@ -512,29 +416,17 @@ export class LanguageServer {
      * @param option The option to check for
      * @return Promise<boolean> A promise that resolves to true if the option is found
      */
-    private async checkPsalmLanguageServerHasOption(
-        psalmScriptArgs: string[],
-        option: string
-    ): Promise<boolean> {
+    private async checkPsalmLanguageServerHasOption(psalmScriptArgs: string[], option: string): Promise<boolean> {
         const psalmScriptPath = await this.resolvePsalmScriptPath();
 
         try {
-            const args: string[] = [
-                '-f',
-                psalmScriptPath,
-                '--',
-                '--help',
-                ...psalmScriptArgs,
-            ];
+            const args: string[] = ['-f', psalmScriptPath, '--', '--help', ...psalmScriptArgs];
             const out = await this.executePhp(args);
 
             const escaped = option.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&');
 
-            return new RegExp(
-                '(\\b|\\s)' + escaped + '(?![-_])(\\b|\\s)',
-                'm'
-            ).test(out);
-        } catch (err) {
+            return new RegExp(`(\\b|\\s)${escaped}(?![-_])(\\b|\\s)`, 'm').test(out);
+        } catch (_err) {
             return false;
         }
     }
@@ -545,14 +437,11 @@ export class LanguageServer {
      * @return Promise<string> A promise that resolves to the stdout of PHP
      */
     private async executePhp(args: string[]): Promise<string> {
-        let stdout: string | Buffer | null | undefined;
-
         const { file, args: fileArgs } = await this.getPhpArgs(args);
 
-        // eslint-disable-next-line prefer-const
-        ({ stdout } = await execFile(file, fileArgs, {
+        const { stdout } = await execFile(file, fileArgs, {
             cwd: this.workspacePath,
-        }));
+        });
         return String(stdout);
     }
 
@@ -561,15 +450,11 @@ export class LanguageServer {
      *
      * @param args The arguments to pass to PHP
      */
-    private async getPhpArgs(
-        args: string[]
-    ): Promise<{ file: string; args: string[] }> {
-        const phpExecutablePath =
-            this.configurationService.get('phpExecutablePath');
+    private async getPhpArgs(args: string[]): Promise<{ file: string; args: string[] }> {
+        const phpExecutablePath = this.configurationService.get('phpExecutablePath');
 
-        if (!phpExecutablePath || !phpExecutablePath.length) {
-            const msg =
-                'Unable to find any php executable please set one in psalm.phpExecutablePath';
+        if (!phpExecutablePath?.length) {
+            const msg = 'Unable to find any php executable please set one in psalm.phpExecutablePath';
             await showOpenSettingsPrompt(`Psalm can not start: ${msg}`);
             throw new Error(msg);
         }
@@ -582,14 +467,10 @@ export class LanguageServer {
             throw new Error(msg);
         }
 
-        const phpExecutableArgs =
-            this.configurationService.get('phpExecutableArgs');
+        const phpExecutableArgs = this.configurationService.get('phpExecutableArgs');
 
         if (phpExecutableArgs) {
-            if (
-                Array.isArray(phpExecutableArgs) &&
-                phpExecutableArgs.length > 0
-            ) {
+            if (Array.isArray(phpExecutableArgs) && phpExecutableArgs.length > 0) {
                 args.unshift(...phpExecutableArgs);
             }
         }
@@ -623,7 +504,7 @@ export class LanguageServer {
         try {
             const stat = statSync(filePath);
             return stat.isFile();
-        } catch (e) {
+        } catch (_e) {
             return false;
         }
     }
@@ -632,13 +513,10 @@ export class LanguageServer {
      * Resolve Pslam Script Path if absolute or relative
      */
     private async resolvePsalmScriptPath(): Promise<string> {
-        const psalmScriptPath =
-            this.configurationService.get('psalmScriptPath');
+        const psalmScriptPath = this.configurationService.get('psalmScriptPath');
 
         if (!psalmScriptPath) {
-            await showErrorMessage(
-                'Unable to find Psalm Language Server. Please set psalm.psalmScriptPath'
-            );
+            await showErrorMessage('Unable to find Psalm Language Server. Please set psalm.psalmScriptPath');
             throw new Error('psalmScriptPath is not set');
         }
 

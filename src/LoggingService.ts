@@ -1,4 +1,4 @@
-import { window, OutputChannel } from 'vscode';
+import { type OutputChannel, type ViewColumn, window } from 'vscode';
 
 export type LogLevel = 'TRACE' | 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'NONE';
 export class LoggingService implements OutputChannel {
@@ -58,8 +58,14 @@ export class LoggingService implements OutputChannel {
      *
      * @param preserveFocus When `true` the channel will not take focus.
      */
-    show(): void {
-        this.outputChannel.show(...arguments);
+    show(preserveFocus?: boolean): void;
+    show(column?: ViewColumn, preserveFocus?: boolean): void;
+    show(columnOrFocus?: ViewColumn | boolean, preserveFocus?: boolean): void {
+        if (typeof columnOrFocus === 'boolean' || columnOrFocus === undefined) {
+            this.outputChannel.show(columnOrFocus);
+        } else {
+            this.outputChannel.show(columnOrFocus, preserveFocus);
+        }
     }
 
     /**
@@ -106,12 +112,7 @@ export class LoggingService implements OutputChannel {
      * @param message The message to append to the output channel
      */
     public logDebug(message: string, data?: unknown): void {
-        if (
-            this.logLevel === 'NONE' ||
-            this.logLevel === 'INFO' ||
-            this.logLevel === 'WARN' ||
-            this.logLevel === 'ERROR'
-        ) {
+        if (this.logLevel === 'NONE' || this.logLevel === 'INFO' || this.logLevel === 'WARN' || this.logLevel === 'ERROR') {
             return;
         }
         this.logMessage(message, 'DEBUG');
@@ -126,11 +127,7 @@ export class LoggingService implements OutputChannel {
      * @param message The message to append to the output channel
      */
     public logInfo(message: string, data?: unknown): void {
-        if (
-            this.logLevel === 'NONE' ||
-            this.logLevel === 'WARN' ||
-            this.logLevel === 'ERROR'
-        ) {
+        if (this.logLevel === 'NONE' || this.logLevel === 'WARN' || this.logLevel === 'ERROR') {
             return;
         }
         this.logMessage(message, 'INFO');
