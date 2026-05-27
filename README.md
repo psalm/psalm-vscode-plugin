@@ -5,7 +5,7 @@
 # Psalm — PHP Static Analysis for VS Code
 
 [![VS Marketplace version](https://img.shields.io/visual-studio-marketplace/v/getpsalm.psalm-vscode-plugin)](https://marketplace.visualstudio.com/items?itemName=getpsalm.psalm-vscode-plugin)
-[![VS Code Version](https://img.shields.io/badge/VS_Code-%3E%3D1.80.2-blue?style=flat-square&logo=visualstudiocode)](https://code.visualstudio.com)
+[![VS Code Version](https://img.shields.io/badge/VS_Code-%3E%3D1.95.0-blue?style=flat-square&logo=visualstudiocode)](https://code.visualstudio.com)
 [![TypeScript](https://img.shields.io/badge/TypeScript-blue?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![License MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
 
