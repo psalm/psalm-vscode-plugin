@@ -155,7 +155,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         onWorkspacePathChange();
     });
 
-    loggingService.logDebug('Finished Extension Activation');
+    if (languageServer.isReady()) {
+        loggingService.logDebug('Psalm extension activated');
+    }
 }
 
 export async function deactivate() {

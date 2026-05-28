@@ -129,9 +129,12 @@ export class LanguageServer {
 
     public async start() {
         // Check if psalm is installed and supports the language server protocol.
+        const psalmScriptPathConfigured = !!this.configurationService.get('psalmScriptPath');
         const isValidPsalmVersion: boolean = await this.checkPsalmHasLanguageServer();
         if (!isValidPsalmVersion) {
-            showOpenSettingsPrompt('Psalm is not installed');
+            if (psalmScriptPathConfigured) {
+                showOpenSettingsPrompt('Psalm is not installed');
+            }
             return;
         }
 
@@ -483,7 +486,12 @@ export class LanguageServer {
      * @return Promise<boolean> A promise that resolves to true if the language server protocol is supported
      */
     private async checkPsalmHasLanguageServer(): Promise<boolean> {
-        const psalmScriptPath = await this.resolvePsalmScriptPath();
+        let psalmScriptPath: string;
+        try {
+            psalmScriptPath = await this.resolvePsalmScriptPath();
+        } catch {
+            return false;
+        }
 
         const exists: boolean = this.isFile(psalmScriptPath);
 
@@ -516,8 +524,14 @@ export class LanguageServer {
         const psalmScriptPath = this.configurationService.get('psalmScriptPath');
 
         if (!psalmScriptPath) {
-            await showErrorMessage('Unable to find Psalm Language Server. Please set psalm.psalmScriptPath');
-            throw new Error('psalmScriptPath is not set');
+            const defaultPath = join(this.workspacePath, 'vendor', 'vimeo', 'psalm', 'psalm-language-server');
+            if (!this.isFile(defaultPath)) {
+                this.loggingService.logInfo(
+                    `psalm.psalmScriptPath is not set and psalm-language-server was not found at the default path (${defaultPath}). Set psalm.psalmScriptPath to enable Psalm.`
+                );
+                throw new Error('psalmScriptPath is not set and psalm language server not found at default path');
+            }
+            return defaultPath;
         }
 
         if (isAbsolute(psalmScriptPath)) {
