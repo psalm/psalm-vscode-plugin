@@ -120,7 +120,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     configWatcher.onDidCreate(onConfigChange);
     configWatcher.onDidDelete(onConfigDelete);
 
-    context.subscriptions.push(...registerCommands(languageServer, configurationService, loggingService));
+    context.subscriptions.push(statusBar, ...registerCommands(languageServer, configurationService, loggingService));
 
     // Start Lanuage Server
     await languageServer.start();

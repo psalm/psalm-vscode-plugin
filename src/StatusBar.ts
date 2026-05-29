@@ -46,4 +46,8 @@ export class StatusBar {
     public hide() {
         this.statusBarItem.hide();
     }
+
+    public dispose() {
+        this.statusBarItem.dispose();
+    }
 }

@@ -67,6 +67,25 @@ export class LanguageServer {
                     ],
                 },
                 progressOnInitialization: true,
+                middleware: {
+                    handleWorkDoneProgress: (_token, params, _next) => {
+                        switch (params.kind) {
+                            case 'begin':
+                                this.statusBar.update(LanguageServerStatus.Analyzing, params.message ?? params.title);
+                                break;
+                            case 'report':
+                                if (params.message) {
+                                    this.statusBar.update(LanguageServerStatus.Analyzing, params.message);
+                                }
+                                break;
+                            case 'end':
+                                if (params.message) {
+                                    this.statusBar.update(LanguageServerStatus.Running, params.message);
+                                }
+                                break;
+                        }
+                    },
+                },
                 errorHandler: this.createDefaultErrorHandler(this.configurationService.get('maxRestartCount') - 1),
             },
             this.debug
@@ -139,7 +158,6 @@ export class LanguageServer {
         }
 
         this.initalizing = true;
-        this.statusBar.update(LanguageServerStatus.Initializing, 'starting');
         this.loggingService.logInfo('Starting language server');
         await this.languageClient.start();
         // this.context.subscriptions.push(this.disposable);

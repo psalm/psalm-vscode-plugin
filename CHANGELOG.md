@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.8.2] - 2026-05-28
+
+### Fixed
+
+- Fixed duplicate status bar item appearing during file analysis. `vscode-languageclient` was rendering `$/progress` notifications as a second `ProgressLocation.Window` status bar item alongside the extension's own status bar. Server-initiated work done progress is now suppressed via middleware, and the extension's status bar item is properly disposed on deactivation.
+- The extension's status bar item is no longer shown during the initialization phase, avoiding overlap with the built-in initialization progress indicator.
+
 ## [2.8.1] - 2026-05-28
 
 ### Changed
