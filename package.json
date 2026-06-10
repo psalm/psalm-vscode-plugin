@@ -250,7 +250,7 @@
         "@types/semver": "^7.7.1",
         "@types/vscode": "^1.95.0",
         "@types/which": "^3.0.0",
-        "@vscode/vsce": "^3.9.1",
+        "@vscode/vsce": "^3.9.2",
         "esbuild": "^0.28.0",
         "typescript": "^6.0.3"
     },
