@@ -245,7 +245,7 @@
         }
     },
     "devDependencies": {
-        "@biomejs/biome": "^2.5.1",
+        "@biomejs/biome": "^2.5.2",
         "@types/node": "^24.12.4",
         "@types/semver": "^7.7.1",
         "@types/vscode": "^1.95.0",
