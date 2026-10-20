@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.9.0] - 2026-10-20
+
+### Changed
+
+- Updated `vscode-languageclient` to 10. The Psalm Language Server output channel is now a log channel, so its messages carry VS Code's timestamps and levels, and the language client's traces follow the channel's log level.
+- Updated the development dependencies.
+
 ## [2.8.2] - 2026-05-28
 
 ### Fixed
