@@ -1,12 +1,21 @@
-import { type OutputChannel, type ViewColumn, window } from 'vscode';
+import { type LogLevel as ChannelLogLevel, type Event, type LogOutputChannel, type ViewColumn, window } from 'vscode';
 
 export type LogLevel = 'TRACE' | 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'NONE';
-export class LoggingService implements OutputChannel {
+export class LoggingService implements LogOutputChannel {
     readonly name: string = 'Psalm Language Server';
 
-    private outputChannel = window.createOutputChannel('Psalm Language Server');
+    private outputChannel = window.createOutputChannel('Psalm Language Server', { log: true });
 
-    private logLevel: LogLevel = 'DEBUG';
+    private outputLevel: LogLevel = 'DEBUG';
+
+    /**
+     * The log level of the channel, set by the user in VS Code.
+     */
+    get logLevel(): ChannelLogLevel {
+        return this.outputChannel.logLevel;
+    }
+
+    readonly onDidChangeLogLevel: Event<ChannelLogLevel> = this.outputChannel.onDidChangeLogLevel;
 
     private content: string[] = [];
 
@@ -28,8 +37,7 @@ export class LoggingService implements OutputChannel {
      * @param value A string, falsy values will not be printed.
      */
     append(value: string): void {
-        this.content.push(value);
-        this.content = this.content.slice(-this.contentLimit);
+        this.record(value);
         this.outputChannel.append(value);
     }
 
@@ -40,8 +48,7 @@ export class LoggingService implements OutputChannel {
      * @param value A string, falsy values will be printed.
      */
     appendLine(value: string): void {
-        this.content.push(value);
-        this.content = this.content.slice(-this.contentLimit);
+        this.record(value);
         this.outputChannel.appendLine(value);
     }
 
@@ -82,21 +89,61 @@ export class LoggingService implements OutputChannel {
         this.outputChannel.dispose();
     }
 
+    /**
+     * Outputs a trace message, such as the messages the language client traces.
+     */
+    trace(message: string, ...args: unknown[]): void {
+        this.record(message);
+        this.outputChannel.trace(message, ...args);
+    }
+
+    /**
+     * Outputs a debug message.
+     */
+    debug(message: string, ...args: unknown[]): void {
+        this.record(message);
+        this.outputChannel.debug(message, ...args);
+    }
+
+    /**
+     * Outputs an info message.
+     */
+    info(message: string, ...args: unknown[]): void {
+        this.record(message);
+        this.outputChannel.info(message, ...args);
+    }
+
+    /**
+     * Outputs a warning message.
+     */
+    warn(message: string, ...args: unknown[]): void {
+        this.record(message);
+        this.outputChannel.warn(message, ...args);
+    }
+
+    /**
+     * Outputs an error message.
+     */
+    error(error: string | Error, ...args: unknown[]): void {
+        this.record(typeof error === 'string' ? error : (error.stack ?? error.message));
+        this.outputChannel.error(error, ...args);
+    }
+
     public setOutputLevel(logLevel: LogLevel) {
-        this.logLevel = logLevel;
+        this.outputLevel = logLevel;
     }
 
     public getOutputLevel(): LogLevel {
-        return this.logLevel;
+        return this.outputLevel;
     }
 
     public logTrace(message: string, data?: unknown): void {
         if (
-            this.logLevel === 'NONE' ||
-            this.logLevel === 'INFO' ||
-            this.logLevel === 'WARN' ||
-            this.logLevel === 'ERROR' ||
-            this.logLevel === 'DEBUG'
+            this.outputLevel === 'NONE' ||
+            this.outputLevel === 'INFO' ||
+            this.outputLevel === 'WARN' ||
+            this.outputLevel === 'ERROR' ||
+            this.outputLevel === 'DEBUG'
         ) {
             return;
         }
@@ -112,7 +159,7 @@ export class LoggingService implements OutputChannel {
      * @param message The message to append to the output channel
      */
     public logDebug(message: string, data?: unknown): void {
-        if (this.logLevel === 'NONE' || this.logLevel === 'INFO' || this.logLevel === 'WARN' || this.logLevel === 'ERROR') {
+        if (this.outputLevel === 'NONE' || this.outputLevel === 'INFO' || this.outputLevel === 'WARN' || this.outputLevel === 'ERROR') {
             return;
         }
         this.logMessage(message, 'DEBUG');
@@ -127,7 +174,7 @@ export class LoggingService implements OutputChannel {
      * @param message The message to append to the output channel
      */
     public logInfo(message: string, data?: unknown): void {
-        if (this.logLevel === 'NONE' || this.logLevel === 'WARN' || this.logLevel === 'ERROR') {
+        if (this.outputLevel === 'NONE' || this.outputLevel === 'WARN' || this.outputLevel === 'ERROR') {
             return;
         }
         this.logMessage(message, 'INFO');
@@ -142,7 +189,7 @@ export class LoggingService implements OutputChannel {
      * @param message The message to append to the output channel
      */
     public logWarning(message: string, data?: unknown): void {
-        if (this.logLevel === 'NONE' || this.logLevel === 'ERROR') {
+        if (this.outputLevel === 'NONE' || this.outputLevel === 'ERROR') {
             return;
         }
         this.logMessage(message, 'WARN');
@@ -152,7 +199,7 @@ export class LoggingService implements OutputChannel {
     }
 
     public logError(message: string, error?: Error | string) {
-        if (this.logLevel === 'NONE') {
+        if (this.outputLevel === 'NONE') {
             return;
         }
         this.logMessage(message, 'ERROR');
@@ -174,6 +221,14 @@ export class LoggingService implements OutputChannel {
 
     public getContent(): string[] {
         return this.content;
+    }
+
+    /**
+     * Keeps the last messages, for bug reports.
+     */
+    private record(value: string): void {
+        this.content.push(value);
+        this.content = this.content.slice(-this.contentLimit);
     }
 
     private logObject(data: unknown): void {
