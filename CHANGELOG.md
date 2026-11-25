@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.10.0] - 2026-11-25
+
+### Changed
+
+- Updated `vscode-languageclient` to 11, which fixes several language client races, including a stop that follows a failed initialization and document open/close ordering.
+- Updated `semver` and the development dependencies, including fixes for security advisories in `@azure/msal-node` and `qs`.
+- The extension is now built, published to the VS Code Marketplace and Open VSX, and released on GitHub automatically when the version changes on `master`.
+
 ## [2.9.0] - 2026-10-20
 
 ### Changed
