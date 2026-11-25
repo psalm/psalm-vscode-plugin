@@ -46,7 +46,7 @@ PSalm VS Code plugin that integrates [Psalm](https://psalm.dev) PHP static analy
 - Production package: `npm run package` (minified bundle, no sourcemap).
 - VSIX package: `npm run vsce:package`.
 - CI (`ci.yml`) type-checks, lints and builds the VSIX on every push and PR, and uploads it as the `psalm-vscode-plugin-vsix` artifact.
-- Releases are automatic (`publish.yml`): to release, bump `version` in `package.json` (and `package-lock.json`) and add a matching `## [x.y.z]` section to `CHANGELOG.md`, then merge to `master`. The workflow builds the VSIX, publishes it to the VS Code Marketplace with `vsce publish --oidc` (Trusted Publishing, no PAT) and to Open VSX with `ovsx publish` (token in the `OPEN_VSX` secret), and creates the GitHub release `x.y.z` with the changelog section as notes and the VSIX attached. The Trusted Publishing policy names `publish.yml`, so don't rename it.
+- Releases are automatic (`publish.yml`): to release, bump `version` in `package.json` (and `package-lock.json`) and add a matching `## [x.y.z]` section to `CHANGELOG.md`, then merge to `master`. The workflow builds the VSIX, publishes it to the VS Code Marketplace (`vsce publish --oidc`) and Open VSX (`ovsx publish --trusted-publishing`), and creates the GitHub release `x.y.z` with the changelog section as notes and the VSIX attached. Both registries use Trusted Publishing (GitHub OIDC, no token secrets), and the trusted publisher on each registry names `publish.yml`, so don't rename it.
 
 ## Pull Request Guidelines
 

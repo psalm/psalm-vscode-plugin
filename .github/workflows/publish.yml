@@ -4,10 +4,10 @@ name: publish
 # builds the VSIX, publishes it to the Visual Studio Marketplace and the Open VSX Registry, then
 # creates the GitHub release (tag = version, notes = the version's CHANGELOG.md section, VSIX attached).
 #
-# Marketplace authentication uses Trusted Publishing (OIDC), so no PAT secret is needed:
-# https://code.visualstudio.com/api/working-with-extensions/publishing-extension
-# The Trusted Publishing policy on the "getpsalm" publisher names this file, so keep it named publish.yml.
-# Open VSX authentication uses the access token in the OPEN_VSX repository secret.
+# Both registries authenticate with Trusted Publishing (GitHub OIDC), so no token secrets are needed:
+# - VS Code Marketplace: https://code.visualstudio.com/api/working-with-extensions/publishing-extension
+# - Open VSX: https://open-vsx.org/user-settings/trusted-publishers
+# The trusted publisher registered on each registry names this file, so keep it named publish.yml.
 #
 # Re-running is safe: nothing happens if a GitHub release for the version already exists,
 # and a version already on either registry is skipped.
@@ -90,9 +90,7 @@ jobs:
 
       - name: Publish to Open VSX Registry
         if: steps.version.outputs.released == 'false'
-        env:
-          OVSX_PAT: ${{ secrets.OPEN_VSX }}
-        run: npx ovsx publish --skip-duplicate --packagePath "psalm-vscode-plugin-${{ steps.version.outputs.version }}.vsix"
+        run: npx ovsx publish --trusted-publishing --skip-duplicate --packagePath "psalm-vscode-plugin-${{ steps.version.outputs.version }}.vsix"
 
       - name: Create GitHub release
         if: steps.version.outputs.released == 'false'
