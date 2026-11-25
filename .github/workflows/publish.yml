@@ -1,0 +1,105 @@
+name: publish
+
+# Releases the extension whenever the version in package.json changes on master:
+# builds the VSIX, publishes it to the Visual Studio Marketplace and the Open VSX Registry, then
+# creates the GitHub release (tag = version, notes = the version's CHANGELOG.md section, VSIX attached).
+#
+# Marketplace authentication uses Trusted Publishing (OIDC), so no PAT secret is needed:
+# https://code.visualstudio.com/api/working-with-extensions/publishing-extension
+# The Trusted Publishing policy on the "getpsalm" publisher names this file, so keep it named publish.yml.
+# Open VSX authentication uses the access token in the OPEN_VSX repository secret.
+#
+# Re-running is safe: nothing happens if a GitHub release for the version already exists,
+# and a version already on either registry is skipped.
+on:
+  push:
+    branches: [master]
+    paths: [package.json]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Read version
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if gh release view "$VERSION" > /dev/null 2>&1; then
+            echo "Release $VERSION already exists, nothing to do."
+            echo "released=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "released=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Extract release notes from CHANGELOG.md
+        if: steps.version.outputs.released == 'false'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          node -e '
+            const fs = require("fs");
+            const version = process.env.VERSION;
+            const lines = fs.readFileSync("CHANGELOG.md", "utf8").split("\n");
+            const start = lines.findIndex((l) => l.startsWith(`## [${version}]`));
+            if (start === -1) {
+              console.log(`::error::CHANGELOG.md has no "## [${version}]" section`);
+              process.exit(1);
+            }
+            let end = lines.findIndex((l, i) => i > start && l.startsWith("## "));
+            if (end === -1) end = lines.length;
+            const notes = lines.slice(start + 1, end).join("\n").trim();
+            if (!notes) {
+              console.log(`::error::The CHANGELOG.md section for ${version} is empty`);
+              process.exit(1);
+            }
+            fs.writeFileSync(process.env.RUNNER_TEMP + "/notes.md", notes + "\n");
+          '
+
+      - uses: actions/setup-node@v7
+        if: steps.version.outputs.released == 'false'
+        with:
+          node-version: "24"
+
+      - if: steps.version.outputs.released == 'false'
+        run: npm ci
+
+      # vscode:prepublish runs `npm run check` and `npm run package` first.
+      - name: Build VSIX
+        if: steps.version.outputs.released == 'false'
+        run: npx vsce package -o "psalm-vscode-plugin-${{ steps.version.outputs.version }}.vsix"
+
+      - name: Publish to Visual Studio Marketplace
+        if: steps.version.outputs.released == 'false'
+        run: npx vsce publish --oidc --skip-duplicate --packagePath "psalm-vscode-plugin-${{ steps.version.outputs.version }}.vsix"
+
+      - name: Publish to Open VSX Registry
+        if: steps.version.outputs.released == 'false'
+        env:
+          OVSX_PAT: ${{ secrets.OPEN_VSX }}
+        run: npx ovsx publish --skip-duplicate --packagePath "psalm-vscode-plugin-${{ steps.version.outputs.version }}.vsix"
+
+      - name: Create GitHub release
+        if: steps.version.outputs.released == 'false'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release create "$VERSION" "psalm-vscode-plugin-$VERSION.vsix" \
+            --target "$GITHUB_SHA" \
+            --title "$VERSION" \
+            --notes-file "$RUNNER_TEMP/notes.md"
