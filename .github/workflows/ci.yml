@@ -13,4 +13,10 @@ jobs:
           node-version: "24"
       - run: npm install
       - run: npm run check
-      - run: npm run package
+      # vscode:prepublish builds the production bundle (npm run package) before packaging.
+      - run: npx vsce package -o psalm-vscode-plugin.vsix
+      - uses: actions/upload-artifact@v7
+        with:
+          name: psalm-vscode-plugin-vsix
+          path: psalm-vscode-plugin.vsix
+          if-no-files-found: error
